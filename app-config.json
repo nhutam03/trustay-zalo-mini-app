@@ -1,0 +1,19 @@
+{
+  "app": {
+    "title": "Trustay - Tìm nơi ở tin cậy",
+    "headerColor": "#0cb963",
+    "textColor": "white",
+    "statusBarColor": "#0cb963",
+    "leftButton": "back",
+    "statusBar": "transparent"
+  },
+  "listCSS": [],
+  "listSyncJS": [],
+  "listAsyncJS": [],
+  "template": {
+    "name": "trustay-rental",
+    "primaryColor": "#0cb963",
+    "searchBar": true,
+    "oaIDtoOpenChat": ""
+  }
+}
