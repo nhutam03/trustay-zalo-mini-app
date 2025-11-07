@@ -16,5 +16,15 @@ export default () => {
         "@": "/src",
       },
     },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'https://api.trustay.life',
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path,
+        },
+      },
+    },
   });
 };

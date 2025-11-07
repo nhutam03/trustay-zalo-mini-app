@@ -24,3 +24,10 @@ export const changeStatusBarColor = (type?: "primary" | "secondary") => {
     textColor: textStatusBarColor[type] as "white" | "black",
   });
 };
+
+export function encodeSearchQuery(query: string | undefined | null): string {
+	if (!query || query.trim() === '') {
+		return '.';
+	}
+	return query.trim();
+}

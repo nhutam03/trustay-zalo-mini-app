@@ -4,7 +4,8 @@ import RoomSeekingCard from "@/components/room-seeking-card";
 import RoommateCard from "@/components/roommate-seeking-card";
 import useSetHeader from "@/hooks/useSetHeader";
 import { RoomCardProps, RoommateCardProps, RoomSeekingCardProps } from "@/interfaces/basic";
-import { getFeaturedRoommatePosts, getFeaturedRoomSeekingPosts } from "@/services/listing";
+import { searchRoommatePosts } from '@/services/room-seeking-service';
+import { listPublicRoomSeekingPosts, searchRoomListings } from "@/services/listing";
 import { getFeaturedRooms } from "@/services/room";
 import { changeStatusBarColor } from "@/utils/basic";
 import { roomsToRoomCards } from "@/utils/room";
@@ -19,18 +20,29 @@ import Tabs from "zmp-ui/tabs";
 const ExplorePage: React.FC = () => {
   const setHeader = useSetHeader();
   const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">("all-rooms");
-  
+
   // State for all rooms
   const [allRooms, setAllRooms] = useState<RoomCardProps[]>([]);
   const [loadingAllRooms, setLoadingAllRooms] = useState(true);
-  
+  const [currentPageAllRooms, setCurrentPageAllRooms] = useState(1);
+  const [totalPagesAllRooms, setTotalPagesAllRooms] = useState(1);
+  const [totalAllRooms, setTotalAllRooms] = useState(0);
+
   // State for seeking rooms (people looking for rooms)
   const [seekingRooms, setSeekingRooms] = useState<RoomSeekingCardProps[]>([]);
   const [loadingSeekingRooms, setLoadingSeekingRooms] = useState(false);
-  
+  const [currentPageSeekingRooms, setCurrentPageSeekingRooms] = useState(1);
+  const [totalPagesSeekingRooms, setTotalPagesSeekingRooms] = useState(1);
+  const [totalSeekingRooms, setTotalSeekingRooms] = useState(0);
+
   // State for roommate posts
   const [roommatePosts, setRoommatePosts] = useState<RoommateCardProps[]>([]);
   const [loadingRoommates, setLoadingRoommates] = useState(false);
+  const [currentPageRoommates, setCurrentPageRoommates] = useState(1);
+  const [totalPagesRoommates, setTotalPagesRoommates] = useState(1);
+  const [totalRoommates, setTotalRoommates] = useState(0);
+
+  const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
     setHeader({
@@ -45,12 +57,16 @@ const ExplorePage: React.FC = () => {
   }, []);
 
   // Load all rooms (general listing)
-  const loadAllRooms = async () => {
+  const loadAllRooms = async (page: number = 1) => {
     try {
       setLoadingAllRooms(true);
-      const rooms = await getFeaturedRooms(20);
-      const roomCards = roomsToRoomCards(rooms);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const response = await searchRoomListings({ search: '.', page, limit: ITEMS_PER_PAGE });
+      const roomCards = roomsToRoomCards(response);
       setAllRooms(roomCards);
+      setCurrentPageAllRooms(response.meta.page);
+      setTotalPagesAllRooms(response.meta.totalPages);
+      setTotalAllRooms(response.meta.total);
     } catch (error) {
       console.error("Failed to load all rooms:", error);
     } finally {
@@ -59,12 +75,16 @@ const ExplorePage: React.FC = () => {
   };
 
   // Load seeking rooms (people looking for rooms)
-  const loadSeekingRooms = async () => {
+  const loadSeekingRooms = async (page: number = 1) => {
     try {
       setLoadingSeekingRooms(true);
-      const posts = await getFeaturedRoomSeekingPosts(20);
-      const cards = roomSeekingPostsToCards(posts);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const response = await listPublicRoomSeekingPosts({ page, limit: ITEMS_PER_PAGE });
+      const cards = roomSeekingPostsToCards(response);
       setSeekingRooms(cards);
+      setCurrentPageSeekingRooms(response.meta.page);
+      setTotalPagesSeekingRooms(response.meta.totalPages);
+      setTotalSeekingRooms(response.meta.total);
     } catch (error) {
       console.error("Failed to load room seeking posts:", error);
     } finally {
@@ -73,12 +93,16 @@ const ExplorePage: React.FC = () => {
   };
 
   // Load roommate posts
-  const loadRoommatePosts = async () => {
+  const loadRoommatePosts = async (page: number = 1) => {
     try {
       setLoadingRoommates(true);
-      const posts = await getFeaturedRoommatePosts(20);
-      const cards = roommatePostsToCards(posts);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const response = await searchRoommatePosts({ page, limit: ITEMS_PER_PAGE });
+      const cards = roommatePostsToCards(response.data);
       setRoommatePosts(cards);
+      setCurrentPageRoommates(response.meta.page);
+      setTotalPagesRoommates(response.meta.totalPages);
+      setTotalRoommates(response.meta.total);
     } catch (error) {
       console.error("Failed to load roommate posts:", error);
     } finally {
@@ -89,13 +113,97 @@ const ExplorePage: React.FC = () => {
   // Handle tab change
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId as typeof activeTab);
-    
+
     // Load data for the selected tab if not loaded yet
     if (tabId === "seeking-rooms" && seekingRooms.length === 0) {
       loadSeekingRooms();
     } else if (tabId === "seeking-roommates" && roommatePosts.length === 0) {
       loadRoommatePosts();
     }
+  };
+
+  // Pagination component
+  const Pagination = ({
+    currentPage,
+    totalPages,
+    onPageChange
+  }: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+  }) => {
+    if (totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages: (number | string)[] = [];
+      const maxVisible = 5;
+
+      if (totalPages <= maxVisible) {
+        for (let i = 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        if (currentPage <= 3) {
+          for (let i = 1; i <= 4; i++) pages.push(i);
+          pages.push('...');
+          pages.push(totalPages);
+        } else if (currentPage >= totalPages - 2) {
+          pages.push(1);
+          pages.push('...');
+          for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+        } else {
+          pages.push(1);
+          pages.push('...');
+          pages.push(currentPage - 1);
+          pages.push(currentPage);
+          pages.push(currentPage + 1);
+          pages.push('...');
+          pages.push(totalPages);
+        }
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="flex justify-center items-center gap-2 mt-6 mb-4">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 rounded-md bg-white border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        >
+          ←
+        </button>
+
+        {getPageNumbers().map((page, index) => (
+          typeof page === 'number' ? (
+            <button
+              key={index}
+              onClick={() => onPageChange(page)}
+              className={`px-3 py-2 rounded-md ${
+                currentPage === page
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white border border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {page}
+            </button>
+          ) : (
+            <span key={index} className="px-2">
+              {page}
+            </span>
+          )
+        ))}
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 rounded-md bg-white border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        >
+          →
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -129,11 +237,18 @@ const ExplorePage: React.FC = () => {
                 <p className="text-gray-500">Đang tải...</p>
               </div>
             ) : allRooms.length > 0 ? (
-              <div className="grid grid-cols-2 gap-3">
-                {allRooms.map((room) => (
-                  <RoomCard key={room.id} {...room} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  {allRooms.map((room) => (
+                    <RoomCard key={room.id} {...room} />
+                  ))}
+                </div>
+                <Pagination
+                  currentPage={currentPageAllRooms}
+                  totalPages={totalPagesAllRooms}
+                  onPageChange={(page) => loadAllRooms(page)}
+                />
+              </>
             ) : (
               <div className="text-center py-10">
                 <p className="text-gray-500">Không có phòng nào</p>
@@ -150,11 +265,18 @@ const ExplorePage: React.FC = () => {
                 <p className="text-gray-500">Đang tải...</p>
               </div>
             ) : seekingRooms.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3">
-                {seekingRooms.map((post) => (
-                  <RoomSeekingCard key={post.id} {...post} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-3">
+                  {seekingRooms.map((post) => (
+                    <RoomSeekingCard key={post.id} {...post} />
+                  ))}
+                </div>
+                <Pagination
+                  currentPage={currentPageSeekingRooms}
+                  totalPages={totalPagesSeekingRooms}
+                  onPageChange={(page) => loadSeekingRooms(page)}
+                />
+              </>
             ) : (
               <div className="text-center py-10">
                 <p className="text-gray-500">Không có bài đăng tìm phòng nào</p>
@@ -171,11 +293,18 @@ const ExplorePage: React.FC = () => {
                 <p className="text-gray-500">Đang tải...</p>
               </div>
             ) : roommatePosts.length > 0 ? (
-              <div className="grid grid-cols-2">
-                {roommatePosts.map((post) => (
-                  <RoommateCard key={post.id} {...post} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2">
+                  {roommatePosts.map((post) => (
+                    <RoommateCard key={post.id} {...post} />
+                  ))}
+                </div>
+                <Pagination
+                  currentPage={currentPageRoommates}
+                  totalPages={totalPagesRoommates}
+                  onPageChange={(page) => loadRoommatePosts(page)}
+                />
+              </>
             ) : (
               <div className="text-center py-10">
                 <p className="text-gray-500">Không có bài đăng tìm bạn ở ghép nào</p>
@@ -185,6 +314,7 @@ const ExplorePage: React.FC = () => {
         )}
       </Box>
 
+      <div className="h-4 mb-8 bg-white" />
       <BottomNav />
     </Page>
   );

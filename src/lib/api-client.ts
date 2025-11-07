@@ -13,67 +13,147 @@ export const API_CONFIG = {
   TIMEOUT: 30000,
   HEADERS: {
     "Content-Type": "application/json",
-    "User-Agent": "Trustay-Zalo-Mini-App/1.0",
+    // User-Agent removed - not allowed in browser environment
   },
 };
 
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
+// Detect if we're running in Zalo Mini App environment
+let isZaloEnvironment: boolean | null = null;
+
+const checkZaloEnvironment = async (): Promise<boolean> => {
+  if (isZaloEnvironment !== null) {
+    return isZaloEnvironment;
+  }
+
+  try {
+    // Try to use nativeStorage API - if it works, we're in Zalo
+    await nativeStorage.getItem({ keys: ['__zalo_test__'] });
+    isZaloEnvironment = true;
+    return true;
+  } catch (error: any) {
+    // If error code is -1404 (API not supported), we're NOT in Zalo environment
+    if (error?.code === -1404) {
+      isZaloEnvironment = false;
+      return false;
+    }
+    // Other errors might mean we ARE in Zalo but something else went wrong
+    // In this case, assume we're in Zalo
+    isZaloEnvironment = true;
+    return true;
+  }
+};
+
+// Storage interface that works both in Zalo Mini App and browser
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    const isZalo = await checkZaloEnvironment();
+
+    if (isZalo) {
+      try {
+        const result = await nativeStorage.getItem({ keys: [key] });
+        return result?.[key] || null;
+      } catch (e) {
+        console.error('Zalo storage getItem failed:', e);
+        // Fall through to localStorage
+      }
+    }
+
+    // Use localStorage (browser or fallback)
+    return localStorage.getItem(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    const isZalo = await checkZaloEnvironment();
+
+    if (isZalo) {
+      try {
+        await nativeStorage.setItem({ [key]: value });
+        return;
+      } catch (e) {
+        console.error('Zalo storage setItem failed:', e);
+        // Fall through to localStorage
+      }
+    }
+
+    // Use localStorage (browser or fallback)
+    localStorage.setItem(key, value);
+  },
+
+  async removeItem(key: string): Promise<void> {
+    const isZalo = await checkZaloEnvironment();
+
+    if (isZalo) {
+      try {
+        await nativeStorage.removeItem({ keys: [key] });
+        return;
+      } catch (e) {
+        console.error('Zalo storage removeItem failed:', e);
+        // Fall through to localStorage
+      }
+    }
+
+    // Use localStorage (browser or fallback)
+    localStorage.removeItem(key);
+  },
+};
+
 export const TokenManager = {
-  getAccessToken(): string | null {
+  async getAccessToken(): Promise<string | null> {
     try {
-      return nativeStorage.getItem(ACCESS_TOKEN_KEY);
+      return await storage.getItem(ACCESS_TOKEN_KEY);
     } catch (e) {
       console.error("getAccessToken error", e);
       return null;
     }
   },
 
-  setAccessToken(token: string): void {
+  async setAccessToken(token: string): Promise<void> {
     try {
-      nativeStorage.setItem(ACCESS_TOKEN_KEY, token);
+      await storage.setItem(ACCESS_TOKEN_KEY, token);
     } catch (e) {
       console.error("setAccessToken error", e);
     }
   },
 
-  clearAccessToken(): void {
+  async clearAccessToken(): Promise<void> {
     try {
-      nativeStorage.removeItem(ACCESS_TOKEN_KEY);
+      await storage.removeItem(ACCESS_TOKEN_KEY);
     } catch (e) {
       console.error("clearAccessToken error", e);
     }
   },
 
-  getRefreshToken(): string | null {
+  async getRefreshToken(): Promise<string | null> {
     try {
-      return nativeStorage.getItem(REFRESH_TOKEN_KEY);
+      return await storage.getItem(REFRESH_TOKEN_KEY);
     } catch (e) {
       console.error("getRefreshToken error", e);
       return null;
     }
   },
 
-  setRefreshToken(token: string): void {
+  async setRefreshToken(token: string): Promise<void> {
     try {
-      nativeStorage.setItem(REFRESH_TOKEN_KEY, token);
+      await storage.setItem(REFRESH_TOKEN_KEY, token);
     } catch (e) {
       console.error("setRefreshToken error", e);
     }
   },
 
-  clearRefreshToken(): void {
+  async clearRefreshToken(): Promise<void> {
     try {
-      nativeStorage.removeItem(REFRESH_TOKEN_KEY);
+      await storage.removeItem(REFRESH_TOKEN_KEY);
     } catch (e) {
       console.error("clearRefreshToken error", e);
     }
   },
 
-  clearAllTokens(): void {
-    this.clearAccessToken();
-    this.clearRefreshToken();
+  async clearAllTokens(): Promise<void> {
+    await this.clearAccessToken();
+    await this.clearRefreshToken();
   },
 };
 
@@ -82,15 +162,16 @@ export const TokenManager = {
 // ========================
 
 // Dùng env của Vite: VITE_API_BASE_URL
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://trustay.life:3000";
+// Always use direct HTTPS connection (no proxy) since backend has proper CORS
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.trustay.life';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: API_CONFIG.TIMEOUT, // Use 30000ms instead of 10000ms
   headers: {
     "Content-Type": "application/json",
-    "User-Agent": "Trustay-ZaloMiniApp",
+    // Note: User-Agent header removed - browsers don't allow setting it
+    // The browser will automatically set User-Agent
   },
 });
 

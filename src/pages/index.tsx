@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import BannerSlider from "@/components/banner-slider";
 import MenuGrid from "@/components/menu-grid";
 import SectionHeader from "@/components/section-header";
-import { getFeaturedRooms } from "@/services/room";
-import { roomsToRoomCards } from "@/utils/room";
+import { getFeaturedRoomListings } from "@/services/listing";
 import RoomCard from "@/components/room-card";
 import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
+import RecentlyViewedRooms from "@/components/recently-viewed-rooms";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -81,8 +81,15 @@ function HomePage() {
     const loadFeaturedRooms = async () => {
       try {
         setLoading(true);
-        const rooms = await getFeaturedRooms(4); // Get 4 featured rooms
-        const roomCards = roomsToRoomCards(rooms);
+        const rooms = await getFeaturedRoomListings(4); // Get 4 featured rooms
+        const roomCards = rooms.map(room => ({
+          id: room.id,
+          title: room.name,
+          price: parseFloat(room.pricing?.basePriceMonthly || "0"),
+          location: `${room.location.wardName}, ${room.location.districtName}, ${room.location.provinceName}`,
+          image: room.images?.[0]?.url || "https://via.placeholder.com/300x200",
+          verified: room.isVerified,
+        }));
         setFeaturedRooms(roomCards);
       } catch (error) {
         console.error("Failed to load featured rooms:", error);
@@ -113,7 +120,14 @@ function HomePage() {
       </Box>
       <BannerSlider />
       <MenuGrid items={menuItems} />
+
       <div className="h-2 bg-gray-100" />
+
+      {/* Recently Viewed Rooms */}
+      <RecentlyViewedRooms />
+
+      <div className="h-2 bg-gray-100" />
+
       <Box className="bg-white pb-4">
         <SectionHeader
           title="PHÒNG TRỌ NỔI BẬT"
@@ -151,7 +165,7 @@ function HomePage() {
 
         <div className="px-4 mt-4">
           <button
-            onClick={() => navigate("/rooms")}
+            onClick={() => navigate("/explore?tab=rooms")}
             className="w-full py-3 border-2 border-primary text-primary font-medium rounded-lg active:opacity-70"
           >
             Xem thêm phòng trọ
@@ -163,7 +177,7 @@ function HomePage() {
 
       <div className="h-4 bg-white" />
 
-      <BottomNav />
+      <BottomNav/>
     </Page>
   );
 }

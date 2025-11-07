@@ -2,6 +2,8 @@ import React from "react";
 import { Box, Icon } from "zmp-ui";
 import { useNavigate } from "react-router-dom";
 import { RoomCardProps } from "@/interfaces/basic";
+import { useQueryClient } from "@tanstack/react-query";
+import { prefetchRoomDetail } from "@/hooks/useRoomQuery";
 
 const RoomCard: React.FC<RoomCardProps> = ({
   id,
@@ -13,9 +15,15 @@ const RoomCard: React.FC<RoomCardProps> = ({
   verified,
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleClick = () => {
-    navigate(`/detail-product/${id}`);
+    navigate(`/room/${id}`);
+  };
+
+  const handleMouseEnter = () => {
+    // Prefetch room detail when user hovers over card
+    prefetchRoomDetail(queryClient, id);
   };
 
   const formatPrice = (price: number) => {
@@ -26,6 +34,8 @@ const RoomCard: React.FC<RoomCardProps> = ({
     <div
       className="trustay-card overflow-hidden"
       onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onTouchStart={handleMouseEnter}
     >
       {/* Image */}
       <div className="relative">

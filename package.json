@@ -17,9 +17,11 @@
   "scripts": {
     "login": "zmp login",
     "start": "zmp start",
-    "deploy": "zmp deploy"
+    "deploy": "zmp deploy",
+    "build": "zmp build"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.7",
     "axios": "^1.13.1",
     "jotai": "^2.12.1",
     "react": "^18.3.1",

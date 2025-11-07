@@ -1,4 +1,4 @@
-import { RoomSeekingPost, RoomSeekingCardProps } from '@/interfaces/basic';
+import { RoomSeekingPost, RoomSeekingCardProps, RoomSeekingPostListResponse } from '@/interfaces/basic';
 /**
  * Convert RoomSeekingPost from API to RoomSeekingCardProps format
  */
@@ -33,6 +33,6 @@ export const roomSeekingPostToCard = (post: RoomSeekingPost): RoomSeekingCardPro
 /**
  * Convert array of RoomSeekingPosts to RoomSeekingCardProps array
  */
-export const roomSeekingPostsToCards = (posts: RoomSeekingPost[]): RoomSeekingCardProps[] => {
-  return posts.map(roomSeekingPostToCard);
+export const roomSeekingPostsToCards = (posts: RoomSeekingPostListResponse): RoomSeekingCardProps[] => {
+  return posts.data.map(roomSeekingPostToCard);
 };

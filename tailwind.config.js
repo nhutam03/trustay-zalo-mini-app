@@ -6,6 +6,12 @@ module.exports = {
   },
   theme: {
     extend: {
+      height: {
+        header: "44px",
+      },
+      padding: {
+        header: "44px",
+      },
       fontFamily: {
         mono: ["Roboto Mono", "monospace"],
       },

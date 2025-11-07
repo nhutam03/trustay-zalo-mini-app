@@ -1,4 +1,4 @@
-import { RoomListing } from '../services/room';
+import { RoomListing, RoomListingsResponse } from '../services/room';
 import { RoomCardProps } from '../interfaces/basic';
 import { API_CONFIG } from '../lib/api-client';
 
@@ -67,6 +67,6 @@ export const roomToRoomCard = (room: RoomListing): RoomCardProps => {
 /**
  * Convert array of RoomListings to RoomCardProps array
  */
-export const roomsToRoomCards = (rooms: RoomListing[]): RoomCardProps[] => {
-	return rooms.map(roomToRoomCard);
+export const roomsToRoomCards = (rooms: RoomListingsResponse): RoomCardProps[] => {
+	return rooms.data.map(roomToRoomCard);
 };
