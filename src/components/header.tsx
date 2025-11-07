@@ -28,10 +28,14 @@ const Header = () => {
   return (
     <div
       className={cx(
-        "fixed top-0 z-50 w-screen h-header flex items-center",
+        "fixed top-0 z-50 w-screen flex items-center",
         headerColor,
         textColor
       )}
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        height: 'calc(44px + env(safe-area-inset-top))'
+      }}
     >
       <div className="flex items-center h-[44px] pl-5 pr-[105px] gap-3 w-full justify-between">
         <div className="flex flex-row items-center gap-2">

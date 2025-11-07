@@ -62,7 +62,7 @@ const Layout = () => {
             {/* <SnackbarProvider> */}
               <ZMPRouter>
                 <Header />
-                <div className="pt-header">
+                <div style={{ paddingTop: 'calc(44px + env(safe-area-inset-top))' }}>
                   <AnimationRoutes>
                   {/* Public routes */}
                   <Route path="/login" element={<LoginPage />}></Route>
