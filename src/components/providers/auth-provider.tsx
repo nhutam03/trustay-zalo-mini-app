@@ -158,8 +158,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const userInfo = await getCurrentUser();
       setUser(userInfo);
+      setIsLoggedIn(true);
     } catch (error) {
       console.error("Failed to refresh user:", error);
+      setUser(null);
+      setIsLoggedIn(false);
     }
   };
 

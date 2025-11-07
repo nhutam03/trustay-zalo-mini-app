@@ -23,38 +23,37 @@ const REFRESH_TOKEN_KEY = "refreshToken";
 // Detect if we're running in Zalo Mini App environment
 let isZaloEnvironment: boolean | null = null;
 
-const checkZaloEnvironment = async (): Promise<boolean> => {
+const checkZaloEnvironment = (): boolean => {
   if (isZaloEnvironment !== null) {
     return isZaloEnvironment;
   }
 
   try {
-    // Try to use nativeStorage API - if it works, we're in Zalo
-    await nativeStorage.getItem({ keys: ['__zalo_test__'] });
-    isZaloEnvironment = true;
-    return true;
-  } catch (error: any) {
-    // If error code is -1404 (API not supported), we're NOT in Zalo environment
-    if (error?.code === -1404) {
-      isZaloEnvironment = false;
-      return false;
+    // Check if we're in Zalo Mini App by checking for ZaloJavaScriptInterface
+    if (typeof window !== 'undefined' && 'ZaloJavaScriptInterface' in window) {
+      isZaloEnvironment = true;
+      return true;
     }
-    // Other errors might mean we ARE in Zalo but something else went wrong
-    // In this case, assume we're in Zalo
-    isZaloEnvironment = true;
-    return true;
+
+    isZaloEnvironment = false;
+    return false;
+  } catch (error: any) {
+    // If any error occurs, assume we're NOT in Zalo (safer fallback)
+    isZaloEnvironment = false;
+    return false;
   }
 };
 
 // Storage interface that works both in Zalo Mini App and browser
 const storage = {
   async getItem(key: string): Promise<string | null> {
-    const isZalo = await checkZaloEnvironment();
+    const isZalo = checkZaloEnvironment();
 
     if (isZalo) {
       try {
-        const result = await nativeStorage.getItem({ keys: [key] });
-        return result?.[key] || null;
+        // Use new nativeStorage API: getItem(key) returns string directly
+        const result = nativeStorage.getItem(key);
+        return result || null;
       } catch (e) {
         console.error('Zalo storage getItem failed:', e);
         // Fall through to localStorage
@@ -66,11 +65,12 @@ const storage = {
   },
 
   async setItem(key: string, value: string): Promise<void> {
-    const isZalo = await checkZaloEnvironment();
+    const isZalo = checkZaloEnvironment();
 
     if (isZalo) {
       try {
-        await nativeStorage.setItem({ [key]: value });
+        // Use new nativeStorage API: setItem(key, value)
+        nativeStorage.setItem(key, value);
         return;
       } catch (e) {
         console.error('Zalo storage setItem failed:', e);
@@ -83,11 +83,12 @@ const storage = {
   },
 
   async removeItem(key: string): Promise<void> {
-    const isZalo = await checkZaloEnvironment();
+    const isZalo = checkZaloEnvironment();
 
     if (isZalo) {
       try {
-        await nativeStorage.removeItem({ keys: [key] });
+        // Use new nativeStorage API: removeItem(key)
+        nativeStorage.removeItem(key);
         return;
       } catch (e) {
         console.error('Zalo storage removeItem failed:', e);
