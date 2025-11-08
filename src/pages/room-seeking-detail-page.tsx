@@ -22,7 +22,7 @@ const RoomSeekingDetailPage: React.FC = () => {
       title: "Chi tiết bài tìm phòng",
       hasLeftIcon: true,
       type: "primary",
-      route: "/explore",
+      route: "/explore?tab=seeking-rooms",
     });
     changeStatusBarColor("primary");
   }, [id]);

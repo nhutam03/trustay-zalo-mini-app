@@ -39,19 +39,19 @@ const ProfilePage: React.FC = () => {
       <Box className="bg-white p-4 mb-2">
         {isLoggedIn ? (
           <div className="flex items-center gap-4">
-            {user?.avatar ? (
+            {user?.avatarUrl ? (
               <img
-                src={user.avatar}
-                alt={user.name}
+                src={user.avatarUrl}
+                alt={`${user.firstName} ${user.lastName}`}
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
               <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
               </div>
             )}
             <div className="flex-1">
-              <h3 className="font-bold text-lg">{user?.name || "Người dùng"}</h3>
+              <h3 className="font-bold text-lg">{`${user?.firstName} ${user?.lastName}` || "Người dùng"}</h3>
               <p className="text-sm text-gray-600">
                 {user?.email || user?.phone || "Chưa cập nhật thông tin"}
               </p>

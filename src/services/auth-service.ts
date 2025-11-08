@@ -13,7 +13,6 @@ export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
-  fullName?: string;
   phone: string;
   gender: 'male' | 'female' | 'other';
   role: 'tenant' | 'landlord';

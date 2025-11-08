@@ -113,6 +113,19 @@ const RoomDetailPage: React.FC = () => {
             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
               {room.maxOccupancy} người
             </span>
+            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+              {room.areaSqm}m²
+            </span>
+            {room.floorNumber && (
+              <span className="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">
+                Tầng {room.floorNumber}
+              </span>
+            )}
+            {room.availableRooms > 0 && (
+              <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded">
+                {room.availableRooms} phòng trống
+              </span>
+            )}
           </div>
 
           <h1 className="text-xl font-bold text-gray-900 mb-2">
@@ -124,6 +137,12 @@ const RoomDetailPage: React.FC = () => {
             <span className="line-clamp-2">
               {room.address}, {room.location.wardName}, {room.location.districtName}, {room.location.provinceName}
             </span>
+          </div>
+
+          {/* View Count */}
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <Icon icon="zi-more-grid" size={14} />
+            <span>{room.viewCount} lượt xem</span>
           </div>
         </div>
 
@@ -270,7 +289,7 @@ const RoomDetailPage: React.FC = () => {
               !isDescriptionExpanded ? "line-clamp-3" : ""
             }`}
           >
-            {room.name}
+            {room.description || room.name}
           </div>
           <button
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
@@ -326,8 +345,56 @@ const RoomDetailPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Similar Rooms */}
+        {room.similarRooms && room.similarRooms.length > 0 && (
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900 mb-3">
+              <Icon icon="zi-home" size={18} />
+              Phòng tương tự
+            </h3>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+              {room.similarRooms.map((similarRoom) => (
+                <div
+                  key={similarRoom.id}
+                  onClick={() => navigate(`/room/${similarRoom.id}`)}
+                  className="flex-shrink-0 w-64 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md cursor-pointer transition-all"
+                >
+                  <div className="w-full h-40 overflow-hidden">
+                    <img
+                      src={similarRoom.images[0]?.url || "/placeholder.jpg"}
+                      alt={similarRoom.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-3">
+                    <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-2 h-10">
+                      {similarRoom.name}
+                    </h4>
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
+                      <Icon icon="zi-location" size={12} />
+                      <span className="line-clamp-1">
+                        {similarRoom.location.districtName}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-red-600">
+                        {formatPrice(similarRoom.pricing.basePriceMonthly)}đ
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{similarRoom.areaSqm}m²</span>
+                      <span>•</span>
+                      <span>{similarRoom.maxOccupancy} người</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Spacer for bottom nav */}
-        <div className="h-4"></div>
+        <div className="h-24"></div>
       </Box>
 
       {/* Fixed Bottom Action Buttons */}

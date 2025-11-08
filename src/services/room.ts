@@ -6,26 +6,34 @@ export interface RoomListing {
 	slug: string;
 	name: string;
 	roomType: string;
+	areaSqm: string;
 	maxOccupancy: number;
 	isVerified: boolean;
 	buildingName: string;
 	buildingVerified: boolean;
 	address: string;
+	addressLine2?: string;
+	availableRooms: number;
 	owner: {
+		id: string;
 		name: string;
-		avatarUrl: string | null;
+		avatarUrl?: string;
 		gender: string;
+		email: string;
+		phone: string;
 		verifiedPhone: boolean;
 		verifiedEmail: boolean;
 		verifiedIdentity: boolean;
+		totalBuildings: number;
+		totalRoomInstances: number;
 	};
 	location: {
 		provinceId: number;
 		provinceName: string;
 		districtId: number;
 		districtName: string;
-		wardId: number;
-		wardName: string;
+		wardId?: number;
+		wardName?: string;
 	};
 	images: Array<{
 		url: string;
@@ -37,22 +45,49 @@ export interface RoomListing {
 		id: string;
 		name: string;
 		category: string;
+		customValue?: string | null;
+		notes?: string | null;
 	}>;
 	costs: Array<{
 		id: string;
 		name: string;
 		value: string;
+		category: string;
+		notes?: string | null;
 	}>;
 	pricing: {
 		basePriceMonthly: string;
-		depositAmount: string;
+		depositAmount?: string;
 		utilityIncluded: boolean;
 	};
 	rules: Array<{
 		id: string;
 		name: string;
 		type: string;
+		customValue?: string | null;
+		notes?: string | null;
+		isEnforced: boolean;
 	}>;
+	buildingId: string;
+	description?: string;
+	buildingDescription?: string;
+	floorNumber?: number;
+	totalRooms: number;
+	isActive: boolean;
+	viewCount: number;
+	lastUpdated: string;
+	seo?: {
+		title: string;
+		description: string;
+		keywords: string;
+	};
+	breadcrumb?: {
+		items: Array<{
+			title: string;
+			path: string;
+		}>;
+	};
+	similarRooms?: Array<RoomListing>;
 }
 
 // Room detail type (for detail page) - same as listing for now

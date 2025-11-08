@@ -22,7 +22,7 @@ const RoommateDetailPage: React.FC = () => {
       title: "Chi tiết bài đăng",
       hasLeftIcon: true,
       type: "primary",
-      route: "/explore",
+      route: "/explore?tab=seeking-roommates",
     });
     changeStatusBarColor("primary");
   }, [id]);
