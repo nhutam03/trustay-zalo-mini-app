@@ -56,7 +56,7 @@ const Layout = () => {
             <App>
           <Suspense
               fallback={
-                <div className="w-screen h-screen flex justify-center items-center">
+                <div className="fixed inset-0 flex items-center justify-center bg-white">
                   <Spinner />
                 </div>
               }

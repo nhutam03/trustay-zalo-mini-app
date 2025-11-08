@@ -65,15 +65,14 @@ const BottomNav: React.FC = () => {
             <button
               key={item.id}
               onClick={() => handleNavClick(item.route)}
-              className={`flex flex-col items-center justify-center gap-1 transition-colors ${
-                active ? "text-primary" : "text-gray-500"
-              }`}
+              className={`flex flex-col items-center justify-center gap-1 transition-colors`}
             >
               <Icon
                 icon={active ? (item.iconActive as any) : (item.icon as any)}
                 size={24}
+                className={active ? "text-primary" : "text-gray-500"}
               />
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className={`text-xs font-medium ${active ? "text-primary" : "text-gray-500"}`}>{item.label}</span>
             </button>
           );
         })}

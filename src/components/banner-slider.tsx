@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import banner2 from "../static/banner/banner2.png";
 
 interface BannerSliderProps {
   banners?: string[];
@@ -11,9 +12,8 @@ interface BannerSliderProps {
 
 const BannerSlider: React.FC<BannerSliderProps> = ({ banners }) => {
   const defaultBanners = [
-    "https://res.cloudinary.com/prod/image/upload/a_90/me/rotate-food-3.png",
-    "https://res.cloudinary.com/prod/image/upload/a_90/me/rotate-food-1.png",
-    "https://res.cloudinary.com/prod/image/upload/a_90/me/rotate-food-4.png",
+    banner2,
+    banner2
   ];
 
   const displayBanners = banners || defaultBanners;
