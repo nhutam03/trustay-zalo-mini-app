@@ -1,109 +1,5 @@
-'use server';
-
-import { AxiosError } from 'axios';
 import { apiClient, extractErrorMessage } from '../lib/api-client';
-
-// Types for error handling
-interface ApiErrorResult {
-	success: false;
-	error: string;
-	status?: number;
-}
-
-interface ApiSuccessResult<T> {
-	success: true;
-	data: T;
-}
-
-type ApiResult<T> = ApiSuccessResult<T> | ApiErrorResult;
-
-//const apiCall = createServerApiCall();
-
-// Types for Roommate Seeking Posts
-export interface RoommateSeekingPost {
-	id: string;
-	title: string;
-	description: string;
-	slug: string;
-
-	// Người đăng (tenant)
-	tenantId: string;
-
-	// Phòng trong platform (tùy chọn)
-	roomInstanceId?: string;
-	rentalId?: string;
-
-	// Phòng ngoài platform (tùy chọn)
-	externalAddress?: string;
-	externalProvinceId?: number;
-	externalDistrictId?: number;
-	externalWardId?: number;
-
-	// Chi phí
-	monthlyRent: number;
-	currency: string;
-	depositAmount: number;
-	utilityCostPerPerson?: number;
-
-	// Số lượng người
-	seekingCount: number;
-	approvedCount: number;
-	remainingSlots: number;
-	maxOccupancy: number;
-	currentOccupancy: number;
-
-	// Yêu cầu
-	preferredGender: 'other' | 'male' | 'female';
-	additionalRequirements?: string;
-
-	// Thời gian
-	availableFromDate: string;
-	minimumStayMonths?: number;
-	maximumStayMonths?: number;
-
-	// Trạng thái
-	status: 'draft' | 'active' | 'paused' | 'closed' | 'expired';
-	requiresLandlordApproval: boolean;
-	isApprovedByLandlord?: boolean;
-	landlordNotes?: string;
-
-	// Visibility
-	isActive: boolean;
-	expiresAt?: string;
-
-	// Statistics
-	viewCount: number;
-	contactCount: number;
-
-	// Timestamps
-	createdAt: string;
-	updatedAt: string;
-
-	// Relations (optional, populated by backend)
-	tenant?: {
-		id: string;
-		firstName?: string;
-		lastName?: string;
-		avatarUrl?: string;
-		phoneNumber?: string;
-	};
-	roomInstance?: {
-		id: string;
-		roomNumber: string;
-		room?: {
-			id: string;
-			name: string;
-			building?: {
-				id: string;
-				name: string;
-				address: string;
-			};
-		};
-	};
-	externalProvince?: { id: number; name: string };
-	externalDistrict?: { id: number; name: string };
-	externalWard?: { id: number; name: string };
-}
+import type { RoommateSeekingPost } from '../interfaces/roommate-interface';
 
 export interface CreateRoommateSeekingPostRequest {
 	// Thông tin cơ bản
@@ -257,7 +153,7 @@ export interface SearchRoommateSeekingPostsParams {
 export const createRoommateSeekingPost = async (
 	data: CreateRoommateSeekingPostRequest,
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPost>> => {
+): Promise<RoommateSeekingPost> => {
 	try {
 		const response = await apiClient<any>(
 			'/api/roommate-seeking-posts',
@@ -269,11 +165,8 @@ export const createRoommateSeekingPost = async (
 
 		return response.data.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tạo bài đăng tìm bạn cùng phòng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -281,7 +174,7 @@ export const createRoommateSeekingPost = async (
 export const getRoommateSeekingPostById = async (
 	id: string,
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPost>> => {
+): Promise<RoommateSeekingPost> => {
 	try {
 		const response = await apiClient<any>(
 			`/api/roommate-seeking-posts/${id}`,
@@ -290,13 +183,10 @@ export const getRoommateSeekingPostById = async (
 			},
 		);
 
-		return response.data.data || [];
+		return response.data;
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tải thông tin bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -307,7 +197,7 @@ export const getMyRoommateSeekingPosts = async (
 		limit?: number;
 	},
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPostListResponse>> => {
+): Promise<RoommateSeekingPostListResponse> => {
 	try {
 		const searchParams = new URLSearchParams();
 		if (params?.page) searchParams.append('page', params.page.toString());
@@ -324,13 +214,10 @@ export const getMyRoommateSeekingPosts = async (
             },
 		);
 
-		return response.data.data || [];
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tải danh sách bài đăng của bạn'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -343,7 +230,7 @@ export const getAllRoommateSeekingPosts = async (
 		sortOrder?: 'asc' | 'desc';
 	},
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPostListResponse>> => {
+): Promise<RoommateSeekingPostListResponse> => {
 	try {
 		const searchParams = new URLSearchParams();
 		if (params?.page) searchParams.append('page', params.page.toString());
@@ -362,13 +249,10 @@ export const getAllRoommateSeekingPosts = async (
 			},
 		);
 
-		return response.data.data || [];
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tải danh sách bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -376,7 +260,7 @@ export const getAllRoommateSeekingPosts = async (
 export const searchRoommateSeekingPosts = async (
 	params: SearchRoommateSeekingPostsParams,
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPostListResponse>> => {
+): Promise<RoommateSeekingPostListResponse> => {
 	try {
 		const searchParams = new URLSearchParams();
 		if (params.page) searchParams.append('page', params.page.toString());
@@ -403,16 +287,10 @@ export const searchRoommateSeekingPosts = async (
 			
 		);
 
-		return {
-			success: true,
-			data: response.data || [],
-		};
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tìm kiếm bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -421,7 +299,7 @@ export const updateRoommateSeekingPost = async (
 	id: string,
 	data: UpdateRoommateSeekingPostRequest,
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPost>> => {
+): Promise<RoommateSeekingPost> => {
 	try {
 		const response = await apiClient<any>(
 			`/api/roommate-seeking-posts/${id}`,
@@ -431,13 +309,10 @@ export const updateRoommateSeekingPost = async (
 			},
 		);
 
-		return response.data.data || [];
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể cập nhật bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -446,7 +321,7 @@ export const updateRoommateSeekingPostStatus = async (
 	id: string,
 	status: 'active' | 'paused' | 'closed' | 'expired',
 	token?: string,
-): Promise<ApiResult<RoommateSeekingPost>> => {
+): Promise<RoommateSeekingPost> => {
 	try {
 		const response = await apiClient<any>(
 			`/api/roommate-seeking-posts/${id}/status`,
@@ -456,16 +331,10 @@ export const updateRoommateSeekingPostStatus = async (
 			},
 		);
 
-		return {
-			success: true,
-			data: response.data.data || [],
-		};
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể cập nhật trạng thái bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -473,7 +342,7 @@ export const updateRoommateSeekingPostStatus = async (
 export const deleteRoommateSeekingPost = async (
 	id: string,
 	token?: string,
-): Promise<ApiResult<{ message: string }>> => {
+): Promise<{ message: string }> => {
 	try {
 		const response = await apiClient<any>(
 			`/api/roommate-seeking-posts/${id}`,
@@ -483,16 +352,10 @@ export const deleteRoommateSeekingPost = async (
 			
 		);
 
-		return {
-			success: true,
-			data: response.data.data || [],
-		};
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể xóa bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };
 
@@ -505,7 +368,7 @@ export const getRoommateSeekingListings = async (
 		sortOrder?: 'asc' | 'desc';
 	},
 	token?: string,
-): Promise<ApiResult<RoommateSeekingListingResponse>> => {
+): Promise<RoommateSeekingListingResponse> => {
 	try {
 		const searchParams = new URLSearchParams();
 		if (params?.page) searchParams.append('page', params.page.toString());
@@ -525,15 +388,9 @@ export const getRoommateSeekingListings = async (
 
 		);
 
-		return {
-			success: true,
-			data: response.data || [],
-		};
+		return response.data || [];
 	} catch (error) {
-		return {
-			success: false,
-			error: extractErrorMessage(error, 'Không thể tải danh sách bài đăng'),
-			status: error instanceof AxiosError ? error.response?.status : undefined,
-		};
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
 	}
 };

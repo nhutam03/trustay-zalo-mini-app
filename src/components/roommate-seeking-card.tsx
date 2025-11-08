@@ -22,7 +22,7 @@ const RoommateCard: React.FC<RoommateCardProps> = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/roommate/${id}`);
+    navigate(`/roommate/${id}`, { state: { fromTab: "seeking-roommates" } });
   };
 
   const formatPrice = (price: number) => {

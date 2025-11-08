@@ -4,6 +4,7 @@ import { Box, Icon, useNavigate } from "zmp-ui";
 import { useRecoilValue } from "recoil";
 import { headerState } from "@/utils/state";
 import logoWhite from "@/static/logo-slogan-white.png";
+import { useLocation } from "react-router-dom";
 
 const typeColor = {
   primary: {
@@ -24,6 +25,18 @@ const Header = () => {
 
   const { headerColor, textColor, iconColor } = typeColor[type! || "primary"];
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleBack = () => {
+    if (route === "/explore" && location.pathname.startsWith("/roommate/")) {
+      // Quay về tab "Tìm bạn" khi từ roommate detail page
+      navigate(route, { state: { activeTab: "seeking-roommates" } });
+    } else if (route) {
+      navigate(route);
+    } else {
+      navigate(-1);
+    }
+  };
 
   return (
     <div
@@ -40,7 +53,7 @@ const Header = () => {
       <div className="flex items-center h-[44px] pl-5 pr-[105px] gap-3 w-full justify-between">
         <div className="flex flex-row items-center gap-2">
           {hasLeftIcon && (
-            <span onClick={() => (route ? navigate(route) : navigate(-1))}>
+            <span onClick={handleBack}>
               <Icon icon="zi-arrow-left" className={iconColor} />
             </span>
           )}

@@ -109,9 +109,16 @@ export interface RoomSeekingPost {
 	// Requester info
 	requester?: {
 		id: string;
+		firstName?: string;
+		lastName?: string;
 		name?: string;
 		email?: string;
 		avatarUrl?: string | null;
+		isVerifiedPhone?: boolean;
+		isVerifiedEmail?: boolean;
+		isVerifiedIdentity?: boolean;
+		isOnline?: boolean;
+		lastActiveAt?: string;
 	};
 	// Amenities
 	amenities?: Array<{
@@ -288,7 +295,7 @@ export interface RoommatePost {
 	lifestyle?: string[]; // VD: ["Thích yên tĩnh", "Hay về muộn", "Nấu ăn thường xuyên"]
 	contactInfo?: ContactInfo;
 	images?: PropertyImage[];
-	status: 'active' | 'inactive' | 'expired' | 'found' | 'closed';
+	status: 'active' | 'inactive' | 'expired' | 'found' | 'closed' | 'paused';
 	isHot?: boolean;
 	views?: number;
 	viewCount?: number; // From API response

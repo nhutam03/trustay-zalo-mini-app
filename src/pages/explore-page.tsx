@@ -4,7 +4,7 @@ import RoomSeekingCard from "@/components/room-seeking-card";
 import RoommateCard from "@/components/roommate-seeking-card";
 import useSetHeader from "@/hooks/useSetHeader";
 import { RoomCardProps, RoommateCardProps, RoomSeekingCardProps } from "@/interfaces/basic";
-import { searchRoommatePosts } from '@/services/room-seeking-service';
+import { useRoommatePostsList } from "@/hooks/useRoommateQuery";
 import { listPublicRoomSeekingPosts, searchRoomListings } from "@/services/listing";
 import { getFeaturedRooms } from "@/services/room";
 import { changeStatusBarColor } from "@/utils/basic";
@@ -12,6 +12,7 @@ import { roomsToRoomCards } from "@/utils/room";
 import { roomSeekingPostsToCards } from "@/utils/room-seeking";
 import { roommatePostsToCards } from "@/utils/roommate-seeking";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 import Box from "zmp-ui/box";
 import Page from "zmp-ui/page";
@@ -19,7 +20,10 @@ import Tabs from "zmp-ui/tabs";
 
 const ExplorePage: React.FC = () => {
   const setHeader = useSetHeader();
-  const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">("all-rooms");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">(
+    (location.state as any)?.activeTab || "all-rooms"
+  );
 
   // State for all rooms
   const [allRooms, setAllRooms] = useState<RoomCardProps[]>([]);
@@ -36,11 +40,14 @@ const ExplorePage: React.FC = () => {
   const [totalSeekingRooms, setTotalSeekingRooms] = useState(0);
 
   // State for roommate posts
-  const [roommatePosts, setRoommatePosts] = useState<RoommateCardProps[]>([]);
-  const [loadingRoommates, setLoadingRoommates] = useState(false);
   const [currentPageRoommates, setCurrentPageRoommates] = useState(1);
-  const [totalPagesRoommates, setTotalPagesRoommates] = useState(1);
-  const [totalRoommates, setTotalRoommates] = useState(0);
+
+  // Use TanStack Query for roommate posts
+  const {
+    data: roommateData,
+    isLoading: loadingRoommates,
+    isFetching: isFetchingRoommates
+  } = useRoommatePostsList(currentPageRoommates, 20);
 
   const ITEMS_PER_PAGE = 20;
 
@@ -52,9 +59,33 @@ const ExplorePage: React.FC = () => {
     });
     changeStatusBarColor("primary");
 
-    // Load initial data for all rooms
-    loadAllRooms();
-  }, []);
+    // Load initial data based on active tab
+    if (activeTab === "all-rooms") {
+      loadAllRooms();
+    } else if (activeTab === "seeking-rooms") {
+      loadSeekingRooms();
+    }
+    // roommate posts are loaded automatically by TanStack Query
+
+    // Restore scroll position when coming back to this page
+    const savedScrollPosition = sessionStorage.getItem(`explore-scroll-${activeTab}`);
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition, 10));
+        sessionStorage.removeItem(`explore-scroll-${activeTab}`);
+      }, 100);
+    }
+  }, [activeTab]);
+
+  // Save scroll position before navigating away
+  useEffect(() => {
+    const handleScroll = () => {
+      sessionStorage.setItem(`explore-scroll-${activeTab}`, window.scrollY.toString());
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeTab]);
 
   // Load all rooms (general listing)
   const loadAllRooms = async (page: number = 1) => {
@@ -92,23 +123,9 @@ const ExplorePage: React.FC = () => {
     }
   };
 
-  // Load roommate posts
-  const loadRoommatePosts = async (page: number = 1) => {
-    try {
-      setLoadingRoommates(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      const response = await searchRoommatePosts({ page, limit: ITEMS_PER_PAGE });
-      const cards = roommatePostsToCards(response.data);
-      setRoommatePosts(cards);
-      setCurrentPageRoommates(response.meta.page);
-      setTotalPagesRoommates(response.meta.totalPages);
-      setTotalRoommates(response.meta.total);
-    } catch (error) {
-      console.error("Failed to load roommate posts:", error);
-    } finally {
-      setLoadingRoommates(false);
-    }
-  };
+  // Derived data for roommate posts
+  const roommatePosts = roommateData?.data ? roommatePostsToCards(roommateData.data) : [];
+  const totalPagesRoommates = roommateData?.meta.totalPages || 1;
 
   // Handle tab change
   const handleTabChange = (tabId: string) => {
@@ -117,9 +134,8 @@ const ExplorePage: React.FC = () => {
     // Load data for the selected tab if not loaded yet
     if (tabId === "seeking-rooms" && seekingRooms.length === 0) {
       loadSeekingRooms();
-    } else if (tabId === "seeking-roommates" && roommatePosts.length === 0) {
-      loadRoommatePosts();
     }
+    // roommate posts are loaded automatically by TanStack Query when needed
   };
 
   // Pagination component
@@ -302,7 +318,10 @@ const ExplorePage: React.FC = () => {
                 <Pagination
                   currentPage={currentPageRoommates}
                   totalPages={totalPagesRoommates}
-                  onPageChange={(page) => loadRoommatePosts(page)}
+                  onPageChange={(page) => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    setCurrentPageRoommates(page);
+                  }}
                 />
               </>
             ) : (

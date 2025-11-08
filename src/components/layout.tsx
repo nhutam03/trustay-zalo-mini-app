@@ -15,6 +15,8 @@ import MessagesPage from "@/pages/message-page";
 import PostRoomPage from "@/pages/post-page";
 import ProfilePage from "@/pages/profile-page";
 import RoomDetailPage from "@/pages/room-detail-page";
+import RoomSeekingDetailPage from "@/pages/room-seeking-detail-page";
+import RoommateDetailPage from "@/pages/roommate-detail-page";
 import LoginPage from "@/pages/login-page";
 import RegisterPage from "@/pages/register-page";
 import ProtectedRoute from "./protected-route";
@@ -70,6 +72,8 @@ const Layout = () => {
                   <Route path="/" element={<HomePage />}></Route>
                   <Route path="/explore" element={<ExplorePage />}></Route>
                   <Route path="/room/:id" element={<RoomDetailPage />}></Route>
+                  <Route path="/room-seeking/:id" element={<RoomSeekingDetailPage />}></Route>
+                  <Route path="/roommate/:id" element={<RoommateDetailPage />}></Route>
 
                   {/* Protected routes - Require authentication */}
                   <Route
