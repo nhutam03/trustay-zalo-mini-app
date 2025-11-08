@@ -109,7 +109,7 @@ function HomePage() {
   };
   return (
     <Page className="bg-gray-50">
-      <Box className="bg-primary px-2 pb-2">
+      {/* <Box className="bg-primary px-2 pb-2">
         <Input.Search
           placeholder="Tìm phòng trọ, khu vực..."
           value={searchQuery}
@@ -117,7 +117,7 @@ function HomePage() {
           onSearch={handleSearch}
           className="bg-white"
         />
-      </Box>
+      </Box> */}
       <BannerSlider />
       <MenuGrid items={menuItems} />
 

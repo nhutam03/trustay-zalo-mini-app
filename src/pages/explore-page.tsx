@@ -12,18 +12,26 @@ import { roomsToRoomCards } from "@/utils/room";
 import { roomSeekingPostsToCards } from "@/utils/room-seeking";
 import { roommatePostsToCards } from "@/utils/roommate-seeking";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 import Box from "zmp-ui/box";
 import Page from "zmp-ui/page";
 import Tabs from "zmp-ui/tabs";
+import { Icon, Input } from "zmp-ui";
 
 const ExplorePage: React.FC = () => {
   const setHeader = useSetHeader();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">(
     (location.state as any)?.activeTab || "all-rooms"
   );
+
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'desc');
 
   // State for all rooms
   const [allRooms, setAllRooms] = useState<RoomCardProps[]>([]);
@@ -52,16 +60,47 @@ const ExplorePage: React.FC = () => {
   const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
-    setHeader({
-      title: "Khám phá",
-      hasLeftIcon: false,
-      type: "primary",
-    });
+    // Get search query from URL
+    const urlSearchQuery = searchParams.get('search');
+
+    // Update header with custom search bar if there's a search query
+    if (urlSearchQuery && activeTab === "all-rooms") {
+      setHeader({
+        customTitle: (
+          <div className="flex-1 flex items-center gap-2 pr-4">
+            <Input.Search
+              placeholder="Tìm phòng trọ..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onSearch={handleSearch}
+              className="flex-1"
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '8px'
+              }}
+            />
+          </div>
+        ),
+        hasLeftIcon: true,
+        route: "/explore",
+        type: "primary",
+      });
+    } else {
+      setHeader({
+        title: "Khám phá",
+        hasLeftIcon: false,
+        type: "primary",
+      });
+    }
     changeStatusBarColor("primary");
+
+    // Get sort parameters from URL
+    const urlSortBy = searchParams.get('sortBy');
+    const urlSortOrder = searchParams.get('sortOrder');
 
     // Load initial data based on active tab
     if (activeTab === "all-rooms") {
-      loadAllRooms();
+      loadAllRooms(1, urlSearchQuery || undefined, urlSortBy || undefined, urlSortOrder || undefined);
     } else if (activeTab === "seeking-rooms") {
       loadSeekingRooms();
     }
@@ -75,7 +114,7 @@ const ExplorePage: React.FC = () => {
         sessionStorage.removeItem(`explore-scroll-${activeTab}`);
       }, 100);
     }
-  }, [activeTab]);
+  }, [activeTab, searchParams]);
 
   // Save scroll position before navigating away
   useEffect(() => {
@@ -87,12 +126,44 @@ const ExplorePage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [activeTab]);
 
+  // Update URL params
+  const updateSearchParams = (params: Record<string, string>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+    setSearchParams(newParams);
+  };
+
+  // Handle search
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    updateSearchParams({ search: query, page: '1' });
+  };
+
+  // Handle sort change
+  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    updateSearchParams({ sortBy: newSortBy, sortOrder: newSortOrder, page: '1' });
+  };
+
   // Load all rooms (general listing)
-  const loadAllRooms = async (page: number = 1) => {
+  const loadAllRooms = async (page: number = 1, searchQuery?: string, sortByParam?: string, sortOrderParam?: string) => {
     try {
       setLoadingAllRooms(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      const response = await searchRoomListings({ search: '.', page, limit: ITEMS_PER_PAGE });
+      const response = await searchRoomListings({
+        search: searchQuery || '.',
+        page,
+        limit: ITEMS_PER_PAGE,
+        sortBy: (sortByParam as 'price' | 'area' | 'createdAt') || 'createdAt',
+        sortOrder: (sortOrderParam as 'asc' | 'desc') || 'desc',
+      });
       const roomCards = roomsToRoomCards(response);
       setAllRooms(roomCards);
       setCurrentPageAllRooms(response.meta.page);
@@ -222,10 +293,108 @@ const ExplorePage: React.FC = () => {
     );
   };
 
+  // Sorting tabs component
+  const SortingTabs = () => {
+    const isActive = (sortByValue: string, sortOrderValue?: string) => {
+      if (sortOrderValue) {
+        return sortBy === sortByValue && sortOrder === sortOrderValue;
+      }
+      return sortBy === sortByValue;
+    };
+
+    return (
+      <div className="bg-white border-b sticky z-[9] shadow-sm mb-3">
+        <div className="flex items-center overflow-x-auto scrollbar-hide">
+          {/* Mới nhất */}
+          <button
+            onClick={() => handleSortChange('createdAt', 'desc')}
+            className={`flex-shrink-0 h-10 px-4 border-b-2 transition-colors text-sm ${
+              isActive('createdAt', 'desc')
+                ? 'border-primary text-primary font-medium'
+                : 'border-transparent text-gray-600'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <Icon icon="zi-calendar" size={16} />
+              Mới nhất
+            </div>
+          </button>
+
+          {/* Phổ biến */}
+          <button
+            onClick={() => handleSortChange('createdAt', 'asc')}
+            className={`flex-shrink-0 h-10 px-4 border-b-2 transition-colors text-sm ${
+              isActive('createdAt', 'asc')
+                ? 'border-primary text-primary font-medium'
+                : 'border-transparent text-gray-600'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              <Icon icon="zi-star" size={16} />
+              Phổ biến
+            </div>
+          </button>
+
+          {/* Giá */}
+          <button
+            onClick={() => {
+              if (isActive('price')) {
+                const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                handleSortChange('price', newOrder);
+              } else {
+                handleSortChange('price', 'asc');
+              }
+            }}
+            className={`flex-shrink-0 h-10 px-4 border-b-2 transition-colors text-sm ${
+              isActive('price')
+                ? 'border-primary text-primary font-medium'
+                : 'border-transparent text-gray-600'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              Giá
+              <span className={`transition-transform inline-block ${
+                  isActive('price', 'desc') ? 'rotate-180' : ''
+                }`}>
+                ↕
+              </span>
+            </div>
+          </button>
+
+          {/* Diện tích */}
+          <button
+            onClick={() => {
+              if (isActive('area')) {
+                const newOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                handleSortChange('area', newOrder);
+              } else {
+                handleSortChange('area', 'desc');
+              }
+            }}
+            className={`flex-shrink-0 h-10 px-4 border-b-2 transition-colors text-sm ${
+              isActive('area')
+                ? 'border-primary text-primary font-medium'
+                : 'border-transparent text-gray-600'
+            }`}
+          >
+            <div className="flex items-center gap-1">
+              Diện tích
+              <span className={`transition-transform inline-block ${
+                  isActive('area', 'desc') ? 'rotate-180' : ''
+                }`}>
+                ↕
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Page className="bg-gray-50 has-bottom-nav">
-      {/* Tabs Header */}
-      <Box className="bg-white sticky top-0 z-10 shadow-sm">
+      {/* Tabs Header - sticky at top */}
+      <Box className="bg-white sticky z-10 shadow-sm">
         <Tabs
           id="explore-tabs"
           activeKey={activeTab}
@@ -242,6 +411,18 @@ const ExplorePage: React.FC = () => {
           </Tabs.Tab>
         </Tabs>
       </Box>
+
+      {/* Search result count - only show if there's a search query */}
+      {searchQuery && activeTab === "all-rooms" && (
+        <Box className="bg-white px-4 py-2 border-b">
+          <div className="text-xs text-gray-500">
+            Tìm thấy <span className="font-semibold text-gray-700">{totalAllRooms}</span> kết quả cho "{searchQuery}"
+          </div>
+        </Box>
+      )}
+
+      {/* Sorting tabs - only for all-rooms tab */}
+      {activeTab === "all-rooms" && <SortingTabs />}
 
       {/* Tab Content */}
       <Box className="p-4">
@@ -262,7 +443,12 @@ const ExplorePage: React.FC = () => {
                 <Pagination
                   currentPage={currentPageAllRooms}
                   totalPages={totalPagesAllRooms}
-                  onPageChange={(page) => loadAllRooms(page)}
+                  onPageChange={(page) => loadAllRooms(
+                    page,
+                    searchParams.get('search') || undefined,
+                    searchParams.get('sortBy') || undefined,
+                    searchParams.get('sortOrder') || undefined
+                  )}
                 />
               </>
             ) : (
