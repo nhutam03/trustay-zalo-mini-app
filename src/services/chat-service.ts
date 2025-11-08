@@ -1,0 +1,197 @@
+
+import { MESSAGE_TYPES } from '../constants/basic';
+import { apiClient } from '../lib/api-client';
+
+export interface MessageData {
+	id: string;
+	conversationId: string;
+	senderId: string;
+	content: string;
+	type: string;
+	attachments: Array<{ id: string; url: string; type: string; name?: string }>;
+	isEdited: boolean;
+	sentAt: string;
+	readAt: string | null;
+	metadata?: {
+		roomId?: string;
+		roomSlug?: string;
+		roomName?: string;
+		roomImage?: string;
+		roomPrice?: string;
+		roomLocation?: string;
+		roomSeekingPostId?: string;
+		roomSeekingTitle?: string;
+		roomSeekingBudget?: string;
+		roomSeekingLocation?: string;
+		bookingRequestId?: string;
+		roomInvitationId?: string;
+		roommateApplicationId?: string;
+		roommateSeekingPostId?: string;
+		roommateSeekingPostTitle?: string;
+		roommateSeekingPostLocation?: string;
+		roommateSeekingPostBudget?: string;
+	};
+}
+
+export interface ConversationData {
+	conversationId: string;
+	counterpart: {
+		id: string;
+		firstName: string;
+		lastName: string;
+		avatarUrl: string | null;
+	};
+	lastMessage?: {
+		id: string;
+		content: string;
+		type: string;
+		sentAt: string;
+	};
+	unreadCount?: number;
+}
+
+export interface SendMessageData {
+	recipientId?: string;
+	conversationId?: string;
+	content: string;
+	type: string;
+	attachmentUrls?: string[];
+}
+
+export interface SendMessageResponse {
+	data: MessageData;
+}
+
+export interface ListMessagesResponse {
+	data: MessageData[];
+	nextCursor?: string;
+}
+
+export interface ListConversationsResponse {
+	data: ConversationData[];
+}
+
+export interface GetMessagesParams {
+	cursor?: string;
+	limit?: number;
+}
+
+export async function sendMessage(
+	messageData: SendMessageData,
+): Promise<SendMessageResponse> {
+	const response = await apiClient.post<SendMessageResponse>(
+		'/api/chat/messages',
+		{
+			data: messageData,
+		},
+	);
+	return response.data;
+}
+
+export async function getMessages(
+	conversationId: string,
+	params: GetMessagesParams = {},
+	token?: string,
+): Promise<MessageData[]> {
+	const queryParams = new URLSearchParams();
+	if (params.cursor) queryParams.set('cursor', params.cursor);
+	if (params.limit) queryParams.set('limit', params.limit.toString());
+
+	const url = `/api/chat/conversations/${conversationId}/messages${queryParams.toString() ? `?${queryParams}` : ''}`;
+
+	const response = await apiClient.get<MessageData[]>(url);
+	return response.data;
+}
+
+export async function markAllMessagesAsRead(conversationId: string, token?: string): Promise<void> {
+	await apiClient.post<void>(
+		`/api/chat/conversations/${conversationId}/read-all`,
+		{
+			method: 'POST',
+		}
+	);
+}
+
+export async function getConversations(token?: string): Promise<ConversationData[]> {
+	const response = await apiClient.get<ConversationData[]>(
+		'/api/chat/conversations'
+	);
+	return response.data;
+}
+
+export async function getOrCreateConversation(
+	participantId: string,
+	token?: string,
+): Promise<ConversationData> {
+	try {
+		const conversations = await getConversations(token);
+
+		// Find existing conversation with this participant
+		const existingConversation = conversations.find(
+			(conv) => conv.counterpart.id === participantId,
+		);
+
+		if (existingConversation) {
+			return existingConversation;
+		}
+
+		// If no existing conversation, send a message to create one
+		// This is a common pattern where sending the first message creates the conversation
+		const result = await sendMessage(
+			{
+				recipientId: participantId,
+				content: '',
+				type: MESSAGE_TYPES.TEXT,
+			}
+		);
+
+		// Get the conversation data from the message response
+		const conversationId = result.data.conversationId;
+
+		// Fetch the full conversation data
+		const conversationsResponse = await getConversations(token);
+		const newConversation = conversationsResponse.find(
+			(conv) => conv.conversationId === conversationId,
+		);
+
+		if (!newConversation) {
+			throw new Error('Failed to create conversation');
+		}
+
+		return newConversation;
+	} catch (error) {
+		console.error('Get or create conversation error:', error);
+		throw error;
+	}
+}
+
+// Upload attachment files and return URLs using existing upload endpoint
+// export async function uploadChatAttachments(files: File[]): Promise<string[]> {
+// 	const { uploadBulkImages } = await import('./upload.action');
+
+// 	console.log('[Upload] Starting upload for files:', files.length);
+
+// 	try {
+// 		const response = await uploadBulkImages(files);
+// 		console.log('[Upload] Upload response:', response);
+
+// 		// Extract imagePath from results array
+// 		const urls = response.results?.map((result) => result.imagePath) || [];
+// 		console.log('[Upload] Extracted URLs:', urls);
+
+// 		if (urls.length === 0) {
+// 			console.warn('[Upload] No URLs returned from upload');
+// 		}
+
+// 		return urls;
+// 	} catch (error) {
+// 		console.error('[Upload] Failed to upload chat attachments:', error);
+
+// 		// Re-throw with specific error message for better handling
+// 		if (error instanceof Error) {
+// 			throw error; // Preserve the error type (TIMEOUT, FILE_TOO_LARGE, etc.)
+// 		}
+
+// 		throw new Error('UPLOAD_FAILED');
+// 	}
+// }
