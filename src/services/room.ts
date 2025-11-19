@@ -206,7 +206,7 @@ export const getMyRooms = async (params?: { page?: number; limit?: number }): Pr
 		if (params?.limit) queryParams.append('limit', params.limit.toString());
 
 		const endpoint = `/api/rooms/me${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-		
+
 		const response = await apiClient.get<{
 			success: boolean;
 			data: {
@@ -218,5 +218,231 @@ export const getMyRooms = async (params?: { page?: number; limit?: number }): Pr
 	} catch (error) {
 		console.error('Error fetching my rooms:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách phòng của bạn'));
+	}
+};
+
+// Additional types for room management
+export interface CreateRoomRequest {
+	name: string;
+	roomType: string;
+	areaSqm: number;
+	maxOccupancy: number;
+	description?: string;
+	basePriceMonthly: number;
+	depositAmount?: number;
+	utilityIncluded?: boolean;
+	floorNumber?: number;
+	amenities?: Array<{
+		name: string;
+		category: string;
+		customValue?: string;
+		notes?: string;
+	}>;
+	costs?: Array<{
+		name: string;
+		value: number;
+		category: string;
+		notes?: string;
+	}>;
+	rules?: Array<{
+		name: string;
+		type: string;
+		customValue?: string;
+		notes?: string;
+		isEnforced: boolean;
+	}>;
+}
+
+export interface UpdateRoomRequest {
+	name?: string;
+	roomType?: string;
+	areaSqm?: number;
+	maxOccupancy?: number;
+	description?: string;
+	basePriceMonthly?: number;
+	depositAmount?: number;
+	utilityIncluded?: boolean;
+	floorNumber?: number;
+	isActive?: boolean;
+	amenities?: Array<{
+		name: string;
+		category: string;
+		customValue?: string;
+		notes?: string;
+	}>;
+	costs?: Array<{
+		name: string;
+		value: number;
+		category: string;
+		notes?: string;
+	}>;
+	rules?: Array<{
+		name: string;
+		type: string;
+		customValue?: string;
+		notes?: string;
+		isEnforced: boolean;
+	}>;
+}
+
+export interface RoomInstance {
+	id: string;
+	roomId: string;
+	roomNumber: string;
+	status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+	currentOccupancy: number;
+	notes?: string;
+}
+
+export interface RoomInstancesResponse {
+	data: RoomInstance[];
+	total: number;
+}
+
+export interface UpdateRoomInstanceStatusRequest {
+	status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+	notes?: string;
+}
+
+export interface BulkUpdateRoomInstancesRequest {
+	instanceIds: string[];
+	status: 'available' | 'occupied' | 'maintenance' | 'reserved';
+	notes?: string;
+}
+
+// Create room in building (Landlord only)
+export const createRoom = async (
+	buildingId: string,
+	data: CreateRoomRequest
+): Promise<{ data: RoomDetail }> => {
+	try {
+		const response = await apiClient.post<{ data: RoomDetail }>(
+			`/api/rooms/${buildingId}/rooms`,
+			data
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error creating room:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tạo loại phòng'));
+	}
+};
+
+// Get room by slug
+export const getRoomBySlug = async (slug: string): Promise<{ data: RoomDetail }> => {
+	try {
+		const response = await apiClient.get<{ data: RoomDetail }>(`/api/rooms/${slug}`);
+		return response.data;
+	} catch (error) {
+		console.error('Error getting room by slug:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tải thông tin phòng'));
+	}
+};
+
+// Update room (Landlord only)
+export const updateRoom = async (
+	id: string,
+	data: UpdateRoomRequest
+): Promise<{ data: RoomDetail }> => {
+	try {
+		const response = await apiClient.put<{ data: RoomDetail }>(`/api/rooms/${id}`, data);
+		return response.data;
+	} catch (error) {
+		console.error('Error updating room:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể cập nhật loại phòng'));
+	}
+};
+
+// Get rooms by building with pagination
+export const getRoomsByBuilding = async (
+	buildingId: string,
+	params?: {
+		page?: number;
+		limit?: number;
+	}
+): Promise<RoomListingsResponse> => {
+	try {
+		const searchParams = new URLSearchParams();
+		if (params?.page) searchParams.append('page', params.page.toString());
+		if (params?.limit) searchParams.append('limit', params.limit.toString());
+
+		const endpoint = `/api/rooms/building/${buildingId}/rooms${
+			searchParams.toString() ? `?${searchParams.toString()}` : ''
+		}`;
+		const response = await apiClient.get<{
+			success: boolean;
+			message: string;
+			data: RoomListingsResponse;
+		}>(endpoint);
+
+		return response.data.data;
+	} catch (error) {
+		console.error('Error getting rooms by building:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách phòng'));
+	}
+};
+
+// Get room instances by status
+export const getRoomInstancesByStatus = async (
+	roomId: string,
+	status?: string
+): Promise<RoomInstancesResponse> => {
+	try {
+		const searchParams = new URLSearchParams();
+		if (status && status !== 'all') searchParams.append('status', status);
+
+		const endpoint = `/api/rooms/${roomId}/instances/status${
+			searchParams.toString() ? `?${searchParams.toString()}` : ''
+		}`;
+		const response = await apiClient.get<RoomInstancesResponse>(endpoint);
+
+		return response.data;
+	} catch (error) {
+		console.error('Error getting room instances by status:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách phòng'));
+	}
+};
+
+// Update single room instance status
+export const updateRoomInstanceStatus = async (
+	instanceId: string,
+	data: UpdateRoomInstanceStatusRequest
+): Promise<{ message: string }> => {
+	try {
+		const response = await apiClient.put<{ message: string }>(
+			`/api/rooms/instance/${instanceId}/status`,
+			data
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error updating room instance status:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể cập nhật trạng thái phòng'));
+	}
+};
+
+// Bulk update room instances status
+export const bulkUpdateRoomInstancesStatus = async (
+	roomId: string,
+	data: BulkUpdateRoomInstancesRequest
+): Promise<{ message: string }> => {
+	try {
+		const response = await apiClient.put<{ message: string }>(
+			`/api/rooms/${roomId}/instances/status/bulk`,
+			data
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error bulk updating room instances status:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể cập nhật trạng thái phòng'));
+	}
+};
+
+// Delete room type (Landlord only)
+export const deleteRoom = async (id: string): Promise<{ message: string }> => {
+	try {
+		const response = await apiClient.delete<{ message: string }>(`/api/rooms/${id}`);
+		return response.data;
+	} catch (error) {
+		console.error('Error deleting room:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể xóa loại phòng'));
 	}
 };
