@@ -25,43 +25,128 @@ const ProfilePage: React.FC = () => {
     navigate("/", { replace: true });
   };
 
-  const menuItems = [
-    { id: "saved", label: "Phòng đã lưu", icon: "zi-heart", route: "/saved" },
-    { id: "contracts", label: "Hợp đồng", icon: "zi-note", route: "/contracts" },
-    { id: "payments", label: "Thanh toán", icon: "zi-poll", route: "/payments" },
-    { id: "settings", label: "Cài đặt", icon: "zi-setting", route: "/settings" },
-    { id: "support", label: "Hỗ trợ", icon: "zi-help-circle", route: "/support" },
-  ];
+  // Menu items dựa trên role
+  const getMenuItems = () => {
+    type MenuItem = {
+      id: string;
+      label: string;
+      icon: string;
+      route: string;
+      description: string;
+    };
+
+    const items: MenuItem[] = [];
+
+    // Booking requests
+    items.push({
+      id: "booking-requests",
+      label: "Yêu cầu đặt phòng",
+      icon: "zi-calendar",
+      route: "/booking-requests",
+      description: "Quản lý yêu cầu đặt phòng",
+    });
+
+    // Dòng 2: Quản lý trọ/Quản lý cho thuê (tùy theo role)
+    items.push({
+      id: "rentals",
+      label: user?.role === "landlord" ? "Quản lý cho thuê" : "Phòng đã thuê",
+      icon: "zi-home",
+      route: "/rentals",
+      description: user?.role === "landlord" ? "Quản lý phòng cho thuê" : "Phòng bạn đang thuê",
+    });
+
+    // Dòng 3: Hợp đồng
+    items.push({
+      id: "contracts",
+      label: "Hợp đồng",
+      icon: "zi-note-text",
+      route: "/contracts",
+      description: "Xem hợp đồng thuê trọ",
+    });
+
+    // Dòng 4: Hóa đơn
+    items.push({
+      id: "invoices",
+      label: "Hóa đơn",
+      icon: "zi-poll",
+      route: "/invoices",
+      description: "Quản lý hóa đơn thanh toán",
+    });
+
+    // Các dòng bổ sung
+    items.push(
+      {
+        id: "saved",
+        label: "Phòng đã lưu",
+        icon: "zi-heart",
+        route: "/saved",
+        description: "Danh sách phòng yêu thích",
+      },
+      {
+        id: "settings",
+        label: "Cài đặt",
+        icon: "zi-setting",
+        route: "/settings",
+        description: "Cài đặt ứng dụng",
+      },
+      {
+        id: "support",
+        label: "Hỗ trợ",
+        icon: "zi-help-circle",
+        route: "/support",
+        description: "Trung tâm hỗ trợ",
+      }
+    );
+
+    return items;
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <Page className="bg-gray-50 has-bottom-nav">
-      {/* User Info Card */}
-      <Box className="bg-white p-4 mb-2">
+      {/* Dòng 1: User Info Card - Avatar và Tên (SĐT/Email) */}
+      <Box className="bg-white mb-2">
         {isLoggedIn ? (
-          <div className="flex items-center gap-4">
-            {user?.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={`${user.firstName} ${user.lastName}`}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
-                {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
+          <button
+            onClick={() => navigate("/profile-detail")}
+            className="w-full p-4 active:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-4">
+              {/* Avatar */}
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={`${user.firstName} ${user.lastName}`}
+                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                  {user?.firstName?.charAt(0)?.toUpperCase() || "U"}
+                </div>
+              )}
+
+              {/* Thông tin user */}
+              <div className="flex-1 text-left">
+                <h3 className="font-bold text-lg text-gray-900">
+                  {`${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "Người dùng"}
+                </h3>
+                <p className="text-sm text-gray-600 mt-0.5">
+                  {user?.phone || user?.email || "Chưa cập nhật thông tin"}
+                </p>
+                {user?.role && (
+                  <span className="inline-block mt-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">
+                    {user.role === "landlord" ? "Chủ trọ" : "Người thuê"}
+                  </span>
+                )}
               </div>
-            )}
-            <div className="flex-1">
-              <h3 className="font-bold text-lg">{`${user?.firstName} ${user?.lastName}` || "Người dùng"}</h3>
-              <p className="text-sm text-gray-600">
-                {user?.email || user?.phone || "Chưa cập nhật thông tin"}
-              </p>
+
+              {/* Icon chevron */}
+              <Icon icon="zi-chevron-right" size={20} className="text-gray-400 flex-shrink-0" />
             </div>
-            <button className="p-2">
-              <Icon icon="zi-edit" size={20} className="text-gray-600" />
-            </button>
-          </div>
+          </button>
         ) : (
-          <div className="flex flex-col items-center gap-4 py-6">
+          <div className="flex flex-col items-center gap-4 py-8 px-4">
             <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
               <Icon icon="zi-user" size={40} className="text-gray-400" />
             </div>
@@ -72,7 +157,7 @@ const ProfilePage: React.FC = () => {
               </p>
               <button
                 onClick={() => navigate("/register")}
-                className="px-6 py-2 bg-primary text-white font-medium rounded-lg hover:opacity-90 active:opacity-70"
+                className="px-6 py-2.5 bg-primary text-white font-medium rounded-lg hover:opacity-90 active:opacity-70 transition-opacity"
               >
                 Đăng ký ngay
               </button>
@@ -81,23 +166,33 @@ const ProfilePage: React.FC = () => {
         )}
       </Box>
 
-      {/* Menu List */}
-      <Box className="bg-white">
-        {menuItems.map((item, index) => (
-          <div key={item.id}>
-            <button className="w-full flex items-center gap-4 px-4 py-4 active:bg-gray-50">
-              <Icon icon={item.icon as any} size={24} className="text-gray-700" />
-              <span className="flex-1 text-left font-medium text-gray-900">
-                {item.label}
-              </span>
-              <Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
-            </button>
-            {index < menuItems.length - 1 && (
-              <div className="border-b border-gray-100 ml-14" />
-            )}
-          </div>
-        ))}
-      </Box>
+      {/* Menu List - Các dòng 2, 3, 4 và các dòng bổ sung */}
+      {isLoggedIn && (
+        <Box className="bg-white">
+          {menuItems.map((item, index) => (
+            <div key={item.id}>
+              <button
+                onClick={() => navigate(item.route)}
+                className="w-full flex items-center gap-4 px-4 py-4 active:bg-gray-50 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                  <Icon icon={item.icon as any} size={22} className="text-primary" />
+                </div>
+                <div className="flex-1 text-left">
+                  <p className="font-medium text-gray-900">{item.label}</p>
+                  {item.description && (
+                    <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                  )}
+                </div>
+                <Icon icon="zi-chevron-right" size={20} className="text-gray-400 flex-shrink-0" />
+              </button>
+              {index < menuItems.length - 1 && (
+                <div className="border-b border-gray-100 ml-16" />
+              )}
+            </div>
+          ))}
+        </Box>
+      )}
 
       {/* Logout Button - Only show if logged in */}
       {isLoggedIn && (
@@ -105,7 +200,7 @@ const ProfilePage: React.FC = () => {
           <button
             onClick={onLogout}
             disabled={loading}
-            className="w-full py-3 border border-red-500 text-red-500 font-medium rounded-lg active:opacity-70 disabled:opacity-50"
+            className="w-full py-3 border border-red-500 text-red-500 font-medium rounded-lg active:opacity-70 disabled:opacity-50 transition-opacity"
           >
             {loading ? "Đang đăng xuất..." : "Đăng xuất"}
           </button>

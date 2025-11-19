@@ -5,6 +5,8 @@ import { useRecoilValue } from "recoil";
 import { headerState } from "@/utils/state";
 import logoWhite from "@/static/logo-slogan-white.png";
 import { useLocation } from "react-router-dom";
+import { getUnreadNotificationCount } from "@/services/notification-service";
+import { useAuth } from "@/components/providers/auth-provider";
 
 const typeColor = {
   primary: {
@@ -26,8 +28,10 @@ const Header = () => {
   const { headerColor, textColor, iconColor } = typeColor[type! || "primary"];
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoggedIn } = useAuth();
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Gợi ý tìm kiếm phổ biến
@@ -61,6 +65,25 @@ const Header = () => {
       inputRef.current.focus();
     }
   }, [showSearch]);
+
+  // Load unread notification count
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      if (isLoggedIn) {
+        try {
+          const response = await getUnreadNotificationCount();
+          setUnreadCount(response.data?.count || response.unreadCount || 0);
+        } catch (error) {
+          console.error('Error loading unread count:', error);
+        }
+      }
+    };
+
+    loadUnreadCount();
+    // Poll every 30 seconds
+    const interval = setInterval(loadUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn]);
 
   const handleSearchClick = () => {
     setShowSearch(true);
@@ -155,6 +178,19 @@ const Header = () => {
             <span onClick={handleSearchClick} className="cursor-pointer">
               <Icon icon="zi-search" className={iconColor} />
             </span>
+            {isLoggedIn && (
+              <button
+                onClick={() => navigate('/notifications')}
+                className="relative cursor-pointer"
+              >
+                <Icon icon="zi-notif" className={iconColor} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
             {rightIcon}
           </div>
         </div>
