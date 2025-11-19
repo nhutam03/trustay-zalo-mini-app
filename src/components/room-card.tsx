@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { RoomCardProps } from "@/interfaces/basic";
 import { useQueryClient } from "@tanstack/react-query";
 import { prefetchRoomDetail } from "@/hooks/useRoomQuery";
+import { getImageProps } from "@/utils/image-proxy";
 
 const RoomCard: React.FC<RoomCardProps> = ({
   id,
@@ -40,8 +41,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
       {/* Image */}
       <div className="relative">
         <img
-          src={image}
-          alt={title}
+          {...getImageProps(image, title, { width: 400, height: 200, quality: 75 })}
           className="w-full h-32 object-cover"
         />
         {verified && (

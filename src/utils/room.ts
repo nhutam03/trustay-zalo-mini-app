@@ -1,6 +1,7 @@
 import { RoomListing, RoomListingsResponse } from '../services/room';
 import { RoomCardProps } from '../interfaces/basic';
 import { API_CONFIG } from '../lib/api-client';
+import { processImageUrl } from './image-proxy';
 
 /**
  * Convert RoomListing from API to RoomCardProps format
@@ -15,27 +16,10 @@ export const roomToRoomCard = (room: RoomListing): RoomCardProps => {
 	
 	console.log('Raw image URL from API:', imageUrl);
 	
-	// Build image URL
-	let image: string;
-	if (imageUrl) {
-		// If URL starts with http/https, use it directly (already full URL)
-		if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-			image = imageUrl;
-			console.log('→ Full URL detected, using as-is');
-		} else {
-			// Remove 'images/' prefix if exists, then prepend base path
-			const filename = imageUrl.startsWith('images/') 
-				? imageUrl.substring(7) // Remove 'images/' (7 characters)
-				: imageUrl;
-			console.log('→ Relative path detected. Filename after processing:', filename);
-			image = `${API_CONFIG.IMAGE_BASE_PATH}/${filename}`;
-		}
-	} else {
-		image = 'https://via.placeholder.com/300x200/0cb963/ffffff?text=No+Image';
-		console.log('→ No image available, using placeholder');
-	}
+	// Use the image proxy utility for better Zalo Mini App compatibility
+	const image = processImageUrl(imageUrl);
 	
-	console.log('Final image URL:', image);
+	console.log('Final image URL (after proxy processing):', image);
 
 	// Build location string from location object
 	let location = '';

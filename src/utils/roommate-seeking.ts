@@ -1,5 +1,6 @@
 import { RoommatePost, RoommateCardProps } from '@/interfaces/basic';
 import { API_CONFIG } from '../lib/api-client';
+import { processImageUrl } from './image-proxy';
 
 /**
  * Convert RoommatePost from API to RoommateCardProps format
@@ -9,18 +10,8 @@ export const roommatePostToCard = (post: RoommatePost): RoommateCardProps => {
   const firstImage = post.images?.[0];
   const imageUrl = firstImage?.url;
 
-  // Build image URL
-  let image: string | undefined;
-  if (imageUrl) {
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      image = imageUrl;
-    } else {
-      const filename = imageUrl.startsWith('images/')
-        ? imageUrl.substring(7)
-        : imageUrl;
-      image = `${API_CONFIG.IMAGE_BASE_PATH}/${filename}`;
-    }
-  }
+  // Use the image proxy utility for better Zalo Mini App compatibility
+  const image = processImageUrl(imageUrl);
 
   // Build location string from address
   let location = '';

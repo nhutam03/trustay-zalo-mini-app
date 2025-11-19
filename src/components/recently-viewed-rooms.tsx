@@ -4,6 +4,7 @@ import { useRecentlyViewedRooms } from "@/hooks/useRoomQuery";
 import RoomCard from "./room-card";
 import { RoomDetail } from "@/services/room";
 import { RoomCardProps } from "@/interfaces/basic";
+import { processImageUrl } from "@/utils/image-proxy";
 
 const RecentlyViewedRooms: React.FC = () => {
   const { data: recentlyViewed = [], isLoading } = useRecentlyViewedRooms();
@@ -17,9 +18,9 @@ const RecentlyViewedRooms: React.FC = () => {
     id: room.id,
     title: room.name,
     price: parseInt(room.pricing.basePriceMonthly),
-    area: room.area,
+    area: (room as any).area || 0, // Handle area property safely
     location: `${room.location.districtName}, ${room.location.provinceName}`,
-    image: room.images[0]?.url || "/placeholder.jpg",
+    image: processImageUrl(room.images[0]?.url),
     verified: room.isVerified,
   }));
 

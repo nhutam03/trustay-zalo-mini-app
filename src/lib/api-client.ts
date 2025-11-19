@@ -176,6 +176,24 @@ export const apiClient = axios.create({
   },
 });
 
+// Add Zalo Mini App specific headers
+apiClient.interceptors.request.use((config) => {
+  const isZalo = checkZaloEnvironment();
+  
+  if (isZalo) {
+    // Add headers that help with CORS and image loading in Zalo Mini App
+    config.headers['X-Requested-With'] = 'XMLHttpRequest';
+    config.headers['X-Zalo-MiniApp'] = '1';
+    
+    // For image requests, add cache control
+    if (config.url?.includes('/images/') || config.url?.includes('image')) {
+      config.headers['Cache-Control'] = 'public, max-age=3600';
+    }
+  }
+  
+  return config;
+});
+
 // ========================
 // Request interceptor: gắn Authorization
 // ========================

@@ -5,6 +5,7 @@ import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useRoomDetail, useTrackRoomView } from "@/hooks/useRoomQuery";
+import { getImageProps } from "@/utils/image-proxy";
 
 const RoomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -71,8 +72,11 @@ const RoomDetailPage: React.FC = () => {
       <div className="relative">
         <div className="w-full h-64 overflow-hidden">
           <img
-            src={room.images[currentImageIndex]?.url || "/placeholder.jpg"}
-            alt={room.images[currentImageIndex]?.alt || room.name}
+            {...getImageProps(
+              room.images[currentImageIndex]?.url,
+              room.images[currentImageIndex]?.alt || room.name,
+              { width: 800, height: 400, quality: 80 }
+            )}
             className="w-full h-full object-cover"
           />
         </div>
@@ -361,8 +365,11 @@ const RoomDetailPage: React.FC = () => {
                 >
                   <div className="w-full h-40 overflow-hidden">
                     <img
-                      src={similarRoom.images[0]?.url || "/placeholder.jpg"}
-                      alt={similarRoom.name}
+                      {...getImageProps(
+                        similarRoom.images[0]?.url,
+                        similarRoom.name,
+                        { width: 400, height: 300, quality: 75 }
+                      )}
                       className="w-full h-full object-cover"
                     />
                   </div>
