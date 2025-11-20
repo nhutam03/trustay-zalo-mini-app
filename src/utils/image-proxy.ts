@@ -93,7 +93,6 @@ export const getImageProps = (
       }
     },
     // Add attributes for better Zalo Mini App compatibility
-    crossOrigin: "anonymous" as const,
     referrerPolicy: "no-referrer" as const,
   };
 };
