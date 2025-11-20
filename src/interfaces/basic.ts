@@ -7,6 +7,7 @@ export type HeaderType = {
   customTitle?: ReactNode;
   type?: "primary" | "secondary";
   rightIcon?: ReactNode;
+  customBackIcon?: () => void;
 };
 
 export interface MenuItemProps {

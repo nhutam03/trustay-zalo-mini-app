@@ -227,3 +227,22 @@ export interface RoomListingsResponse {
 		itemCount: number;
 	};
 }
+export interface RoomInstance {
+	id: string;
+	roomId: string;
+	roomNumber: string;
+	status: 'available' | 'occupied' | 'maintenance' | 'reserved' | 'unavailable';
+	statusReason?: string;
+	floorNumber?: number;
+	lastStatusChange?: string;
+	isActive: boolean;
+	notes?: string | null;
+	createdAt: string;
+	updatedAt: string;
+	// Optional fields from API responses
+	name?: string;
+	roomName?: string;
+	buildingName?: string;
+	areaSqm?: string;
+	roomType?: string;
+}
