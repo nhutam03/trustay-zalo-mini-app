@@ -117,14 +117,14 @@ const Header = () => {
     <>
     <div
       className={cx(
-        "fixed top-0 z-50 w-screen flex items-center",
+        "fixed top-0 z-50 w-screen flex items-end",
         headerColor,
         textColor
       )}
       style={{
         paddingTop: 'env(safe-area-inset-top)',
-        height: 'calc(50px + env(safe-area-inset-top))',
-        paddingBottom: '10px',
+        height: 'calc(70px + env(safe-area-inset-top))',
+        paddingBottom: '12px',
       }}
     >
       {showSearch ? (
@@ -152,7 +152,7 @@ const Header = () => {
         </div>
       ) : (
         // Normal mode
-        <div className="flex items-center h-[44px] pl-5 pr-5 gap-3 w-full justify-between">
+        <div className="flex items-center h-[44px] pl-5 pr-5 gap-3 w-full justify-between ">
           <div className="flex flex-row items-center gap-2">
             {hasLeftIcon && (
               <span onClick={handleBack}>
@@ -202,14 +202,14 @@ const Header = () => {
       <>
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          style={{ top: 'calc(44px + env(safe-area-inset-top))' }}
+          style={{ top: 'calc(70px + env(safe-area-inset-top))' }}
           onClick={handleCloseSearch}
         />
 
         {/* Search suggestions panel */}
         <div
           className="fixed left-0 right-0 bg-white z-40 shadow-lg"
-          style={{ top: 'calc(44px + env(safe-area-inset-top))' }}
+          style={{ top: 'calc(70px + env(safe-area-inset-top))' }}
         >
           {/* Lịch sử tìm kiếm */}
           {recentSearches.length > 0 && !searchQuery && (

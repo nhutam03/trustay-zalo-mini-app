@@ -4,16 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import BottomNav from '@/components/navigate-bottom';
-import { getMyRentals, Rental } from '@/services/rental-service';
+import { useLandlordRentals, useTenantRentals } from '@/hooks/useRentalService';
+import { Rental } from '@/services/rental-service';
 import { useAuth } from '@/components/providers/auth-provider';
 
 const RentalsPage: React.FC = () => {
 	const setHeader = useSetHeader();
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const [rentals, setRentals] = useState<Rental[]>([]);
-	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState<string>('all');
+
+	// Lấy data dựa vào role - chỉ gọi 1 hook dựa trên role
+	const params = filter !== 'all' ? { status: filter } : {};
+
+	const query =
+		user?.role === 'landlord' ? useLandlordRentals(params) : useTenantRentals(params);
+
+	const rentals = query.data?.data || [];
+	const loading = query.isLoading;
 
 	useEffect(() => {
 		setHeader({
@@ -23,23 +31,6 @@ const RentalsPage: React.FC = () => {
 		});
 		changeStatusBarColor('primary');
 	}, []);
-
-	useEffect(() => {
-		loadRentals();
-	}, [filter]);
-
-	const loadRentals = async () => {
-		try {
-			setLoading(true);
-			const params = filter !== 'all' ? { status: filter } : {};
-			const response = await getMyRentals(params);
-			setRentals(response.data);
-		} catch (error) {
-			console.error('Error loading rentals:', error);
-		} finally {
-			setLoading(false);
-		}
-	};
 
 	const getStatusBadge = (status: string) => {
 		const statusConfig = {
@@ -86,7 +77,7 @@ const RentalsPage: React.FC = () => {
 				<div className="flex items-center text-sm">
 					<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 					<span className="text-gray-600">
-						{new Date(rental.startDate).toLocaleDateString('vi-VN')}
+						{new Date(rental.createdAt).toLocaleDateString('vi-VN')}
 						{rental.endDate && ` - ${new Date(rental.endDate).toLocaleDateString('vi-VN')}`}
 					</span>
 				</div>
@@ -98,7 +89,7 @@ const RentalsPage: React.FC = () => {
 				</div>
 				{rental.depositPaid && Number(rental.depositPaid) > 0 && (
 					<div className="flex items-center text-sm">
-						<Icon icon="zi-card" size={16} className="text-gray-400 mr-2" />
+						<Icon icon="zi-check-circle" size={16} className="text-gray-400 mr-2" />
 						<span className="text-gray-600">
 							Đặt cọc: {Number(rental.depositPaid).toLocaleString('vi-VN')} đ
 						</span>

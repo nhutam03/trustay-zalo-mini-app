@@ -43,6 +43,7 @@ const ContractsPage: React.FC = () => {
 		const statusConfig = {
 			draft: { text: 'Nháp', color: 'bg-gray-100 text-gray-800' },
 			pending_signatures: { text: 'Chờ ký', color: 'bg-yellow-100 text-yellow-800' },
+			partially_signed: { text: 'Chờ ký', color: 'bg-yellow-100 text-yellow-800' },
 			active: { text: 'Đang hiệu lực', color: 'bg-green-100 text-green-800' },
 			terminated: { text: 'Đã chấm dứt', color: 'bg-red-100 text-red-800' },
 			expired: { text: 'Hết hạn', color: 'bg-gray-100 text-gray-600' },
@@ -59,57 +60,72 @@ const ContractsPage: React.FC = () => {
 		navigate(`/contracts/${contractId}`);
 	};
 
-	const renderContractCard = (contract: Contract) => (
-		<button
-			key={contract.id}
-			onClick={() => handleContractClick(contract.id)}
-			className="w-full bg-white p-4 mb-3 rounded-lg shadow-sm active:bg-gray-50"
-		>
-			<div className="flex justify-between items-start mb-3">
-				<div className="flex-1 text-left">
-					<h3 className="font-semibold text-gray-900 mb-1">
-						{contract.room?.roomName || contract.room?.name || 'Phòng không xác định'}
-					</h3>
-					<p className="text-sm text-gray-600">{contract.room?.buildingName}</p>
-				</div>
-				{getStatusBadge(contract.status)}
-			</div>
+	const renderContractCard = (contract: Contract) => {
+		// Lấy monthlyRent và depositAmount từ contractData nếu không có ở root
+		const monthlyRent =
+			contract.monthlyRent ||
+			(contract.contractData as any)?.financial?.monthlyRent ||
+			(contract.contractData as any)?.monthlyRent;
+		const depositAmount =
+			contract.depositAmount ||
+			(contract.contractData as any)?.financial?.deposit ||
+			(contract.contractData as any)?.depositAmount;
 
-			<div className="space-y-2 mb-3">
-				<div className="flex items-center text-sm">
-					<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
-					<span className="text-gray-600">
-						{new Date(contract.startDate).toLocaleDateString('vi-VN')} -{' '}
-						{new Date(contract.endDate).toLocaleDateString('vi-VN')}
-					</span>
+		return (
+			<button
+				key={contract.id}
+				onClick={() => handleContractClick(contract.id)}
+				className="w-full bg-white p-4 mb-3 rounded-lg shadow-sm active:bg-gray-50"
+			>
+				<div className="flex justify-between items-start mb-3">
+					<div className="flex-1 text-left">
+						<h3 className="font-semibold text-gray-900 mb-1">
+							{contract.room?.roomName || contract.room?.name || 'Phòng không xác định'}
+						</h3>
+						<p className="text-sm text-gray-600">{contract.room?.buildingName}</p>
+					</div>
+					{getStatusBadge(contract.status)}
 				</div>
-				<div className="flex items-center text-sm">
-					<Icon icon="zi-poll" size={16} className="text-gray-400 mr-2" />
-					<span className="text-gray-600">
-						{contract.monthlyRent.toLocaleString('vi-VN')} đ/tháng
-					</span>
-				</div>
-				{contract.depositAmount > 0 && (
+
+				<div className="space-y-2 mb-3">
 					<div className="flex items-center text-sm">
-						<Icon icon="zi-card" size={16} className="text-gray-400 mr-2" />
+						<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 						<span className="text-gray-600">
-							Đặt cọc: {contract.depositAmount.toLocaleString('vi-VN')} đ
+							{new Date(contract.startDate).toLocaleDateString('vi-VN')}
+							{contract.endDate && ` - ${new Date(contract.endDate).toLocaleDateString('vi-VN')}`}
 						</span>
 					</div>
-				)}
-			</div>
-
-			<div className="flex items-center justify-between pt-2 border-t border-gray-100">
-				<div className="flex items-center text-sm text-gray-600">
-					<Icon icon="zi-user" size={16} className="mr-1" />
-					<span>
-						{contract.tenant?.fullName || `${contract.tenant?.firstName} ${contract.tenant?.lastName}`}
-					</span>
+					{monthlyRent && (
+						<div className="flex items-center text-sm">
+							<Icon icon="zi-poll" size={16} className="text-gray-400 mr-2" />
+							<span className="text-gray-600">
+								{Number(monthlyRent).toLocaleString('vi-VN')} đ/tháng
+							</span>
+						</div>
+					)}
+					{depositAmount && Number(depositAmount) > 0 && (
+						<div className="flex items-center text-sm">
+							<Icon icon="zi-check-circle" size={16} className="text-gray-400 mr-2" />
+							<span className="text-gray-600">
+								Đặt cọc: {Number(depositAmount).toLocaleString('vi-VN')} đ
+							</span>
+						</div>
+					)}
 				</div>
-				<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
-			</div>
-		</button>
-	);
+
+				<div className="flex items-center justify-between pt-2 border-t border-gray-100">
+					<div className="flex items-center text-sm text-gray-600">
+						<Icon icon="zi-user" size={16} className="mr-1" />
+						<span>
+							{contract.tenant?.fullName ||
+								`${contract.tenant?.firstName || ''} ${contract.tenant?.lastName || ''}`.trim()}
+						</span>
+					</div>
+					<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
+				</div>
+			</button>
+		);
+	};
 
 	return (
 		<Page className="bg-gray-50 has-bottom-nav">

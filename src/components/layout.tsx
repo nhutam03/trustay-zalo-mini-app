@@ -24,6 +24,11 @@ import BookingRequestsPage from "@/pages/booking-requests-page";
 import ContractsPage from "@/pages/contracts-page";
 import NotificationsPage from "@/pages/notifications-page";
 import RentalsPage from "@/pages/rentals-page";
+import EditNamePage from "@/pages/profile/EditNamePage";
+import EditBioPage from "@/pages/profile/EditBioPage";
+import EditGenderPage from "@/pages/profile/EditGenderPage";
+import EditDateOfBirthPage from "@/pages/profile/EditDateOfBirthPage";
+import EditBankInfoPage from "@/pages/profile/EditBankInfoPage";
 import ProtectedRoute from "./protected-route";
 import Header from "./header";
 import { RecoilRoot } from "recoil";
@@ -69,7 +74,7 @@ const Layout = () => {
             {/* <SnackbarProvider> */}
               <ZMPRouter>
                 <Header />
-                <div style={{ paddingTop: 'calc(44px + env(safe-area-inset-top))' }}>
+                <div style={{ paddingTop: 'calc(50px + env(safe-area-inset-top) + 0.5rem)'}}>
                   <AnimationRoutes>
                   {/* Public routes */}
                   <Route path="/login" element={<LoginPage />}></Route>
@@ -132,6 +137,13 @@ const Layout = () => {
                   {/* Profile - Cho phép truy cập mà không cần đăng nhập */}
                   <Route path="/profile" element={<ProfilePage />}></Route>
                   <Route path="/profile-detail" element={<ProfileDetailPage />}></Route>
+
+                  {/* Profile Edit Routes */}
+                  <Route path="/profile/edit-name" element={<EditNamePage />}></Route>
+                  <Route path="/profile/edit-bio" element={<EditBioPage />}></Route>
+                  <Route path="/profile/edit-gender" element={<EditGenderPage />}></Route>
+                  <Route path="/profile/edit-dateofbirth" element={<EditDateOfBirthPage />}></Route>
+                  <Route path="/profile/edit-bankinfo" element={<EditBankInfoPage />}></Route>
                   </AnimationRoutes>
                 </div>
               </ZMPRouter>

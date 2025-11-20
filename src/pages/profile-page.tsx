@@ -5,11 +5,14 @@ import BottomNav from "../components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useAuth } from "@/components/providers/auth-provider";
+import { usePrivateUserProfile } from "@/hooks/useUserService";
+import { processImageUrl } from "@/utils/image-proxy";
 
 const ProfilePage: React.FC = () => {
   const setHeader = useSetHeader();
   const navigate = useNavigate();
-  const { user, isLoggedIn, logout: handleLogout, loading } = useAuth();
+  const { isLoggedIn, logout: handleLogout, loading } = useAuth();
+  const {data: user} = usePrivateUserProfile();
 
   useEffect(() => {
     setHeader({
@@ -116,9 +119,17 @@ const ProfilePage: React.FC = () => {
               {/* Avatar */}
               {user?.avatarUrl ? (
                 <img
-                  src={user.avatarUrl}
-                  alt={`${user.firstName} ${user.lastName}`}
-                  className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                  src={processImageUrl(user.avatarUrl)}
+                  alt={"User Avatar"}
+                  className="w-24 h-24 rounded-full object-cover ring-4 ring-white"
+                  crossOrigin="anonymous"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== "https://via.placeholder.com/96/f0f0f0/999999?text=Avatar") {
+                      target.src = "https://via.placeholder.com/96/f0f0f0/999999?text=Avatar";
+                    }
+                  }}
                 />
               ) : (
                 <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">

@@ -195,7 +195,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           </p>
 
           {/* Loading Spinner */}
-          <Spinner />
+          <div className="flex justify-center">
+            <Spinner />
+          </div>
           <p className="mt-4 text-sm text-gray-600">Đang khởi động...</p>
         </div>
       </div>
