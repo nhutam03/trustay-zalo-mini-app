@@ -88,28 +88,6 @@ export const createRental = async (data: CreateRentalRequest): Promise<{ data: R
 	}
 };
 
-// Get rentals based on user role
-export const getMyRentals = async (params?: {
-	page?: number;
-	limit?: number;
-	status?: string;
-}): Promise<PaginatedRentalResponse> => {
-	try {
-		const queryParams = new URLSearchParams();
-		if (params?.page) queryParams.append('page', String(params.page));
-		if (params?.limit) queryParams.append('limit', String(params.limit));
-		if (params?.status) queryParams.append('status', params.status);
-
-		const endpoint = `/api/rentals${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-		const response = await apiClient.get<PaginatedRentalResponse>(endpoint);
-
-		return response.data;
-	} catch (error) {
-		console.error('Error fetching my rentals:', error);
-		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách hợp đồng thuê'));
-	}
-};
-
 // Get landlord rentals
 export const getLandlordRentals = async (params?: {
 	page?: number;

@@ -49,6 +49,32 @@ export interface PublicUserProfile {
 	verifiedIdentity: boolean;
 }
 
+export interface PrivateUserProfile extends PublicUserProfile {
+	email: string;
+	phone: string;
+	gender?: 'male' | 'female' | 'other';
+	dateOfBirth?: string;
+	idCardNumber?: string;
+	bankAccount?: string;
+	bankName?: string;
+	isVerifiedPhone?: boolean;
+	isVerifiedEmail?: boolean;
+	isVerifiedIdentity?: boolean;
+	isVerifiedBank?: boolean;
+	totalRatings?: number;
+	address?: Address[];
+}
+
+export interface Address {
+	id: string;
+	provinceId: number;
+	provinceName: string;
+	districtId: number;
+	districtName: string;
+	wardName?: string;
+	wardId?: number;
+}
+
 // Get public user profile by ID (no authentication required)
 export const getPublicUserProfile = async (userId: string): Promise<PublicUserProfile> => {
 	try {
@@ -58,6 +84,19 @@ export const getPublicUserProfile = async (userId: string): Promise<PublicUserPr
 		return response.data;
 	} catch (error) {
 		console.error('Error getting public user profile:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tải thông tin người dùng'));
+	}
+};
+
+//Get private user profile (authentication required)
+export const getPrivateUserProfile = async (): Promise<PrivateUserProfile> => {
+	try {
+		const response = await apiClient.get<PrivateUserProfile>(
+			`/api/users/profile`
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error getting private user profile:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tải thông tin người dùng'));
 	}
 };
