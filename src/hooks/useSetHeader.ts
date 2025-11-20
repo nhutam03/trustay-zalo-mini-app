@@ -14,6 +14,7 @@ const useSetHeader = () => {
       title = appConfig.app.title,
       customTitle = null,
       type = "primary",
+      customBackIcon,
     }: HeaderType) =>
       setHeader({
         route,
@@ -22,6 +23,7 @@ const useSetHeader = () => {
         title,
         customTitle,
         type,
+        customBackIcon,
       }),
     [setHeader]
   );
