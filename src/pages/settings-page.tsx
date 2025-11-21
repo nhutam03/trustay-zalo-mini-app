@@ -36,7 +36,7 @@ const SettingsPage: React.FC = () => {
 				},
 				{
 					id: 'security',
-					icon: 'zi-shield-check',
+					icon: 'zi-shield-solid',
 					label: 'Bảo mật',
 					description: 'Mật khẩu, xác thực 2 yếu tố',
 					rightIcon: 'zi-chevron-right',
@@ -87,14 +87,14 @@ const SettingsPage: React.FC = () => {
 			items: [
 				{
 					id: 'privacy',
-					icon: 'zi-eye-off',
+					icon: 'zi-hide',
 					label: 'Quyền riêng tư',
 					description: 'Ai có thể xem hồ sơ của bạn',
 					rightIcon: 'zi-chevron-right',
 				},
 				{
 					id: 'blocked',
-					icon: 'zi-block',
+					icon: 'zi-ban',
 					label: 'Người dùng bị chặn',
 					rightIcon: 'zi-chevron-right',
 				},
@@ -105,21 +105,21 @@ const SettingsPage: React.FC = () => {
 			items: [
 				{
 					id: 'language',
-					icon: 'zi-globe',
+					icon: 'zi-wifi',
 					label: 'Ngôn ngữ',
 					description: 'Tiếng Việt',
 					rightIcon: 'zi-chevron-right',
 				},
 				{
 					id: 'theme',
-					icon: 'zi-palette',
+					icon: 'zi-wallpaper',
 					label: 'Giao diện',
 					description: 'Sáng',
 					rightIcon: 'zi-chevron-right',
 				},
 				{
 					id: 'storage',
-					icon: 'zi-storage',
+					icon: 'zi-memory',
 					label: 'Bộ nhớ & dữ liệu',
 					description: '125 MB',
 					rightIcon: 'zi-chevron-right',
@@ -138,7 +138,7 @@ const SettingsPage: React.FC = () => {
 				},
 				{
 					id: 'feedback',
-					icon: 'zi-comment',
+					icon: 'zi-chat',
 					label: 'Gửi phản hồi',
 					rightIcon: 'zi-chevron-right',
 				},
@@ -156,7 +156,7 @@ const SettingsPage: React.FC = () => {
 			items: [
 				{
 					id: 'terms',
-					icon: 'zi-note-text',
+					icon: 'zi-note',
 					label: 'Điều khoản sử dụng',
 					rightIcon: 'zi-chevron-right',
 				},
@@ -238,7 +238,6 @@ const SettingsPage: React.FC = () => {
 				{/* Logout Button */}
 				<button className="w-full bg-white p-4 rounded-lg shadow-sm mb-6 active:bg-gray-50 transition-colors">
 					<div className="flex items-center justify-center gap-2">
-						<Icon icon="zi-logout" size={20} className="text-red-600" />
 						<span className="font-medium text-red-600">Đăng xuất</span>
 					</div>
 				</button>

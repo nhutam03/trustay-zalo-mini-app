@@ -1,0 +1,128 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { ListItem } from '@/interfaces/ai';
+
+interface AIListPreviewProps {
+	items: ReadonlyArray<ListItem>;
+	onOpenFull?: (content: React.ReactNode) => void;
+}
+
+const truncate = (t: string, max = 100) => (t?.length > max ? `${t.slice(0, max)}…` : t);
+
+export const AIListPreview: React.FC<AIListPreviewProps> = ({ items, onOpenFull }) => {
+	const navigate = useNavigate();
+	const preview = items.slice(0, 5);
+
+	const Card = (item: ListItem, compact = true) => (
+		<div
+			className={`flex items-center gap-2 ${compact ? 'p-1' : 'p-2'} rounded border bg-white`}
+			aria-label={item.title}
+		>
+			{item.thumbnailUrl && (
+				<img
+					src={item.thumbnailUrl}
+					alt={item.title}
+					width={compact ? 32 : 48}
+					height={compact ? 32 : 48}
+					className="rounded object-cover border"
+				/>
+			)}
+			<div className="min-w-0">
+				<div
+					className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate text-blue-700 underline-offset-2 group-hover:underline`}
+				>
+					{truncate(item.title)}
+				</div>
+				{item.description && (
+					<div className={`${compact ? 'text-[11px]' : 'text-xs'} text-gray-500 truncate`}>
+						{truncate(item.description)}
+					</div>
+				)}
+			</div>
+		</div>
+	);
+
+	const renderLink = (item: ListItem, node: React.ReactNode) => {
+		const href = item.path || item.externalUrl || '';
+		const isExternal = href.startsWith('http');
+		if (!href)
+			return (
+				<div key={item.id} className="opacity-80 cursor-default">
+					{node}
+				</div>
+			);
+		if (!isExternal && href.startsWith('/')) {
+			return (
+				<button
+					key={item.id}
+					type="button"
+					onClick={() => navigate(href)}
+					className="group block w-full text-left"
+					aria-label={item.title}
+				>
+					{node}
+				</button>
+			);
+		}
+		return (
+			<a
+				key={item.id}
+				href={href}
+				className="group block"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label={item.title}
+			>
+				{node}
+			</a>
+		);
+	};
+
+	return (
+		<div className="mt-3 space-y-1">
+			{preview.map((i) => renderLink(i, Card(i, true)))}
+			{items.length > 5 && onOpenFull && (
+				<div className="pt-1">
+					<button
+						className="text-xs text-blue-700 hover:underline"
+						onClick={() =>
+							onOpenFull(
+								<div className="overflow-auto max-h-[70vh] space-y-2">
+									{items.map((i) => {
+										const node = Card(i, false);
+										const href = i.path || i.externalUrl || '';
+										const isExternal = href.startsWith('http');
+										if (!href) return <div key={i.id}>{node}</div>;
+										return isExternal ? (
+											<a
+												key={i.id}
+												href={href}
+												target="_blank"
+												rel="noopener noreferrer"
+												aria-label={i.title}
+											>
+												{node}
+											</a>
+										) : (
+											<button
+												key={i.id}
+												type="button"
+												onClick={() => navigate(href)}
+												className="block w-full text-left"
+												aria-label={i.title}
+											>
+												{node}
+											</button>
+										);
+									})}
+								</div>,
+							)
+						}
+					>
+						Xem tất cả ({items.length})
+					</button>
+				</div>
+			)}
+		</div>
+	);
+};

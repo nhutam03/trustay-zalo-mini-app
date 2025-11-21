@@ -66,21 +66,29 @@ export const useChatStore = () => {
     }) => {
       try {
         // TODO: Handle file uploads if attachmentFiles exist
-        const messageData: SendMessageData = {
+        const payload: SendMessageData = {
           content: data.content,
           recipientId: data.recipientId,
           conversationId: data.conversationId,
           type: data.type || MESSAGE_TYPES.TEXT,
         };
 
-        const response = await sendMessageApi(messageData);
+        const newMessage = await sendMessageApi(payload);
+        console.log("[useChatStore] sendMessage response:", newMessage);
 
-        // Add the new message to the messages state
-        const conversationId = response.data.conversationId;
-        setMessages((prev) => ({
-          ...prev,
-          [conversationId]: [...(prev[conversationId] || []), response.data],
-        }));
+        // Response is MessageData directly (not wrapped)
+        const conversationId = newMessage.conversationId;
+        console.log("[useChatStore] Adding message to conversation:", conversationId);
+        console.log("[useChatStore] Message data:", newMessage);
+
+        setMessages((prev) => {
+          const updated = {
+            ...prev,
+            [conversationId]: [...(prev[conversationId] || []), newMessage],
+          };
+          console.log("[useChatStore] Updated messages:", updated[conversationId].length);
+          return updated;
+        });
 
         // Update conversation's last message
         setConversations((prev) => {
@@ -90,10 +98,10 @@ export const useChatStore = () => {
               [conversationId]: {
                 ...prev[conversationId],
                 lastMessage: {
-                  id: response.data.id,
-                  content: response.data.content,
-                  type: response.data.type,
-                  sentAt: response.data.sentAt,
+                  id: newMessage.id,
+                  content: newMessage.content,
+                  type: newMessage.type,
+                  sentAt: newMessage.sentAt,
                 },
               },
             };
@@ -101,7 +109,7 @@ export const useChatStore = () => {
           return prev;
         });
 
-        return response;
+        return { data: newMessage };
       } catch (error) {
         console.error("Failed to send message:", error);
         throw error;

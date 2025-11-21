@@ -62,7 +62,7 @@ const ProfilePage: React.FC = () => {
     items.push({
       id: "contracts",
       label: "Hợp đồng",
-      icon: "zi-note-text",
+      icon: "zi-note",
       route: "/contracts",
       description: "Xem hợp đồng thuê trọ",
     });
@@ -79,10 +79,17 @@ const ProfilePage: React.FC = () => {
     // Các dòng bổ sung
     items.push(
       {
+        id: "ai-assistant",
+        label: "Trợ lý AI",
+        icon: "zi-star",
+        route: "/ai-assistant",
+        description: "Tìm phòng với AI thông minh",
+      },
+      {
         id: "saved",
         label: "Phòng đã lưu",
         icon: "zi-heart",
-        route: "/saved",
+        route: "/saved-rooms",
         description: "Danh sách phòng yêu thích",
       },
       {
@@ -96,7 +103,7 @@ const ProfilePage: React.FC = () => {
         id: "support",
         label: "Hỗ trợ",
         icon: "zi-help-circle",
-        route: "/support",
+        route: "/help",
         description: "Trung tâm hỗ trợ",
       }
     );

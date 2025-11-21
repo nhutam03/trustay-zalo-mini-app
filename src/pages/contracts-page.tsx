@@ -130,8 +130,8 @@ const ContractsPage: React.FC = () => {
 	return (
 		<Page className="bg-gray-50 has-bottom-nav">
 			{/* Filter tabs */}
-			<Box className="bg-white mb-2 px-4 py-3">
-				<div className="flex gap-2 overflow-x-auto">
+			<Box className="bg-white mb-2 px-4 py-2">
+				<div className="flex gap-2 overflow-x-auto pt-3">
 					{[
 						{ key: 'all', label: 'Tất cả' },
 						{ key: 'active', label: 'Đang hiệu lực' },
@@ -163,7 +163,7 @@ const ContractsPage: React.FC = () => {
 				) : (
 					<div className="text-center py-8">
 						<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-							<Icon icon="zi-note-text" size={32} className="text-gray-400" />
+							<Icon icon="zi-note" size={32} className="text-gray-400" />
 						</div>
 						<p className="text-gray-500 mb-2">Chưa có hợp đồng nào</p>
 						<p className="text-sm text-gray-400">

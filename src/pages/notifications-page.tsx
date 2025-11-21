@@ -77,7 +77,7 @@ const NotificationsPage: React.FC = () => {
 	const getNotificationIcon = (type: string) => {
 		const iconMap: { [key: string]: string } = {
 			booking: 'zi-calendar',
-			contract: 'zi-note-text',
+			contract: 'zi-note',
 			payment: 'zi-card',
 			message: 'zi-chat',
 			system: 'zi-info-circle',

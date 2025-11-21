@@ -71,8 +71,9 @@ const MessagesPage: React.FC = () => {
   }, [loadConversations]);
 
   const handleConversationClick = (conversationId: string) => {
+    console.log("[MessagePage] Navigating to conversation:", conversationId);
     markAllRead(conversationId);
-    navigate(`/message/${conversationId}`);
+    navigate(`/conversation/${conversationId}`);
   };
 
   return (

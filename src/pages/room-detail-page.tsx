@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Page, Box, Button, Icon, Spinner } from "zmp-ui";
+import { PhotoProvider, PhotoView } from "react-photo-view";
+import "react-photo-view/dist/react-photo-view.css";
 import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
@@ -13,6 +15,11 @@ const RoomDetailPage: React.FC = () => {
   const setHeader = useSetHeader();
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [validImages, setValidImages] = useState<any[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(true);
 
   // Use TanStack Query
   const { data: room, isLoading: loading, error } = useRoomDetail(id);
@@ -35,8 +42,62 @@ const RoomDetailPage: React.FC = () => {
     }
   }, [room]);
 
+  // Pre-validate images before rendering
+  useEffect(() => {
+    if (!room?.images) return;
+
+    const validateImages = async () => {
+      setImagesLoading(true);
+      const imagePromises = room.images.map((image) => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({ ...image, valid: true });
+          img.onerror = () => resolve({ ...image, valid: false });
+          img.src = image.url;
+        });
+      });
+
+      const results = await Promise.all(imagePromises);
+      const valid = results.filter((img: any) => img.valid);
+      setValidImages(valid);
+      setImagesLoading(false);
+    };
+
+    validateImages();
+  }, [room]);
+
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat("vi-VN").format(parseInt(price));
+  };
+
+  // Handle touch events for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!validImages || validImages.length <= 1) return;
+
+    const minSwipeDistance = 50;
+    const distance = touchStart - touchEnd;
+
+    if (Math.abs(distance) < minSwipeDistance) return;
+
+    if (distance > 0) {
+      // Swipe left - next image
+      setCurrentImageIndex((prev) =>
+        prev === validImages.length - 1 ? 0 : prev + 1
+      );
+    } else {
+      // Swipe right - previous image
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? validImages.length - 1 : prev - 1
+      );
+    }
   };
 
   if (loading) {
@@ -69,43 +130,73 @@ const RoomDetailPage: React.FC = () => {
   return (
     <Page className="bg-gray-50 has-bottom-nav">
       {/* Image Gallery */}
-      <div className="relative">
-        <div className="w-full h-64 overflow-hidden">
-          <img
-            {...getImageProps(
-              room.images[currentImageIndex]?.url,
-              room.images[currentImageIndex]?.alt || room.name,
-              { width: 800, height: 400, quality: 80 }
-            )}
-            className="w-full h-full object-cover"
-          />
+      {imagesLoading ? (
+        <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
+          <Spinner />
         </div>
+      ) : validImages.length > 0 ? (
+        <div className="relative">
+          <PhotoProvider>
+            <div
+              ref={imageContainerRef}
+              className="w-full h-64 overflow-hidden relative"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <PhotoView key={validImages[currentImageIndex]?.id} src={validImages[currentImageIndex]?.url}>
+                <img
+                  {...getImageProps(
+                    validImages[currentImageIndex]?.url,
+                    validImages[currentImageIndex]?.alt || room.name,
+                    { width: 800, height: 400, quality: 80 }
+                  )}
+                  className="w-full h-full object-cover cursor-pointer"
+                />
+              </PhotoView>
+            </div>
+          </PhotoProvider>
 
-        {/* Verified Badge */}
-        {room.isVerified && (
-          <div className="absolute top-3 right-3 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-            <Icon icon="zi-check-circle-solid" size={14} />
-            ĐÃ XÁC MINH
-          </div>
-        )}
+          {/* Verified Badge */}
+          {room.isVerified && (
+            <div className="absolute top-3 right-3 bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+              <Icon icon="zi-check-circle-solid" size={14} />
+              ĐÃ XÁC MINH
+            </div>
+          )}
 
-        {/* Image Navigation */}
-        {room.images.length > 1 && (
-          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1">
-            {room.images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  index === currentImageIndex
-                    ? "bg-white w-4"
-                    : "bg-white/50"
-                }`}
-              />
-            ))}
+          {/* Image Counter */}
+          {validImages.length > 1 && (
+            <div className="absolute top-3 left-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-semibold">
+              {currentImageIndex + 1} / {validImages.length}
+            </div>
+          )}
+
+          {/* Image Navigation Dots */}
+          {validImages.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1">
+              {validImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === currentImageIndex
+                      ? "bg-white w-4"
+                      : "bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+          <div className="text-center text-gray-500">
+            <Icon icon="zi-photo" size={48} className="mb-2" />
+            <p className="text-sm">Không có hình ảnh</p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <Box className="p-4 space-y-4">
         {/* Header Section */}

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Page, Box, Avatar, Input, Button, Icon } from "zmp-ui";
+import { Page, Box, Avatar, Input, Button, Icon, Spinner } from "zmp-ui";
 import { useParams, useNavigate } from "react-router-dom";
 import { useChatStore } from "@/hooks/useChatStore";
 import { MESSAGE_TYPES } from "@/constants/basic";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
+import { useAuth } from "@/components/providers/auth-provider";
 
 // Message type content mapping
 const MESSAGE_CONTENT_MAP = {
@@ -57,14 +58,20 @@ function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 const ConversationPage: React.FC = () => {
+  console.log("[ConversationPage] Component rendered");
+
   const params = useParams();
   const navigate = useNavigate();
   const conversationId = params.id as string;
   const setHeader = useSetHeader();
+  const { user } = useAuth();
+
+  console.log("[ConversationPage] params:", params);
 
   const {
     getConversation,
     byConversation,
+    loadConversations,
     loadMessages,
     sendMessage,
     setCurrentConversationId,
@@ -73,25 +80,65 @@ const ConversationPage: React.FC = () => {
 
   const [messageInput, setMessageInput] = useState("");
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const conversation = conversationId ? getConversation(conversationId) : null;
-  const messages = conversationId ? byConversation[conversationId] || [] : [];
+  const messagesRaw = conversationId ? byConversation[conversationId] || [] : [];
 
-  // Dummy user ID - in real app, get from auth context
-  const currentUserId = "current-user-id"; // TODO: Replace with actual user ID from auth
+  // Sort messages by sentAt (oldest first -> newest last)
+  const messages = [...messagesRaw].sort((a, b) =>
+    new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime()
+  );
+
+  // Get current user ID from auth
+  const currentUserId = user?.id || "";
+
+  console.log("[ConversationPage] conversationId:", conversationId);
+  console.log("[ConversationPage] conversation:", conversation);
+  console.log("[ConversationPage] messages:", messages.length);
+  console.log("[ConversationPage] currentUserId:", currentUserId);
 
   useEffect(() => {
-    if (conversationId) {
-      setCurrentConversationId(conversationId);
-      loadMessages(conversationId);
-    }
+    const loadData = async () => {
+      if (conversationId) {
+        setCurrentConversationId(conversationId);
+        setIsLoadingMessages(true);
+        setErrorMessage(null);
+
+        try {
+          console.log("[ConversationPage] Loading conversations and messages...");
+          // Load conversations first to get conversation metadata
+          await loadConversations();
+          console.log("[ConversationPage] Conversations loaded");
+          // Then load messages
+          await loadMessages(conversationId);
+          console.log("[ConversationPage] Messages loaded");
+
+          // Check what we got
+          const conv = getConversation(conversationId);
+          const msgs = byConversation[conversationId] || [];
+          console.log("[ConversationPage] After load - conversation:", conv);
+          console.log("[ConversationPage] After load - messages count:", msgs.length);
+
+          console.log("[ConversationPage] Loaded successfully");
+        } catch (error) {
+          console.error("[ConversationPage] Error loading:", error);
+          setErrorMessage("Không thể tải tin nhắn. Vui lòng thử lại.");
+        } finally {
+          setIsLoadingMessages(false);
+        }
+      }
+    };
+
+    loadData();
 
     return () => {
       setCurrentConversationId(null);
     };
-  }, [conversationId, setCurrentConversationId, loadMessages]);
+  }, [conversationId, setCurrentConversationId, loadConversations, loadMessages]);
 
   useEffect(() => {
     setCurrentUserId(currentUserId);
@@ -145,7 +192,7 @@ const ConversationPage: React.FC = () => {
   };
 
   const isSystemMessage = (messageType: string) => {
-    return SYSTEM_MESSAGE_TYPES.includes(messageType);
+    return SYSTEM_MESSAGE_TYPES.includes(messageType as any);
   };
 
   const getSystemMessageContent = (messageType: string, originalContent: string) => {
@@ -155,7 +202,9 @@ const ConversationPage: React.FC = () => {
     return originalContent;
   };
 
-  if (!conversation) {
+  // Only show "not found" if we're done loading and still no conversation
+  if (!conversation && !isLoadingMessages) {
+    console.log("[ConversationPage] Conversation not found after loading");
     return (
       <Page className="bg-white flex items-center justify-center min-h-screen">
         <Box className="text-center">
@@ -169,12 +218,48 @@ const ConversationPage: React.FC = () => {
   return (
     <Page className="bg-gray-50 flex flex-col h-screen">
       {/* Messages Container */}
-      <Box
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4"
-        onScroll={handleScroll}
-      >
-        {messages.map((msg, index) => {
+      <Box className="flex-1 overflow-hidden">
+        <div
+          ref={messagesContainerRef}
+          className="h-full overflow-y-auto p-4"
+          onScroll={handleScroll}
+        >
+        {/* Loading State */}
+        {isLoadingMessages && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <Spinner />
+              <p className="text-sm text-gray-500 mt-2">Đang tải tin nhắn...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {errorMessage && !isLoadingMessages && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-4">
+              <Icon icon={"zi-warning" as any} size={48} className="text-red-500 mb-2" />
+              <p className="text-red-500 mb-4">{errorMessage}</p>
+              <Button onClick={() => window.location.reload()} variant="primary" size="small">
+                Thử lại
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoadingMessages && !errorMessage && messages.length === 0 && (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-4">
+              <Icon icon={"zi-chat" as any} size={48} className="text-gray-400 mb-2" />
+              <p className="text-gray-500">Chưa có tin nhắn nào</p>
+              <p className="text-sm text-gray-400 mt-1">Gửi tin nhắn đầu tiên để bắt đầu trò chuyện</p>
+            </div>
+          </div>
+        )}
+
+        {/* Messages List */}
+        {!isLoadingMessages && !errorMessage && messages.length > 0 && messages.map((msg, index) => {
           const showDateSeparator =
             index === 0 || !isSameDay(new Date(messages[index - 1].sentAt), new Date(msg.sentAt));
           const isOwnMessage = msg.senderId === currentUserId;
@@ -210,7 +295,7 @@ const ConversationPage: React.FC = () => {
               ) : (
                 // Normal text message
                 <div className={`flex my-2 gap-2 ${isOwnMessage ? "justify-end" : ""}`}>
-                  {!isOwnMessage && (
+                  {!isOwnMessage && conversation && (
                     <Avatar size={32} src={conversation.counterpart.avatarUrl || undefined}>
                       {conversation.counterpart.firstName.charAt(0).toUpperCase()}
                     </Avatar>
@@ -251,9 +336,9 @@ const ConversationPage: React.FC = () => {
                       {isOwnMessage && (
                         <span>
                           {msg.readAt ? (
-                            <Icon icon="zi-check-double" className="text-blue-500" />
+                            <Icon icon={"zi-check-double" as any} className="text-blue-500" />
                           ) : (
-                            <Icon icon="zi-check" />
+                            <Icon icon={"zi-check" as any} />
                           )}
                         </span>
                       )}
@@ -264,7 +349,11 @@ const ConversationPage: React.FC = () => {
             </div>
           );
         })}
-        <div ref={messagesEndRef} />
+
+        {!isLoadingMessages && !errorMessage && messages.length > 0 && (
+          <div ref={messagesEndRef} />
+        )}
+        </div>
       </Box>
 
       {/* Message Input */}
@@ -289,7 +378,7 @@ const ConversationPage: React.FC = () => {
             variant="primary"
             size="small"
           >
-            <Icon icon="zi-send" />
+            <Icon icon={"zi-send" as any} />
           </Button>
         </div>
       </Box>

@@ -13,6 +13,7 @@ export interface UserProfile {
   email: string;
   firstName: string;
   lastName: string;
+  fullName?: string;
   phone: string;
   gender: 'male' | 'female' | 'other';
   role: 'tenant' | 'landlord';
@@ -22,6 +23,13 @@ export interface UserProfile {
   idCardNumber?: string;
   bankAccount?: string;
   bankName?: string;
+  totalBuildings?: number;
+  totalRoomInstances?: number;
+  isVerifiedPhone?: boolean;
+  isVerifiedEmail?: boolean;
+  isVerifiedIdentity?: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AuthResponse {

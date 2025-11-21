@@ -123,7 +123,7 @@ const Header = () => {
       )}
       style={{
         paddingTop: 'env(safe-area-inset-top)',
-        height: 'calc(70px + env(safe-area-inset-top))',
+        height: 'calc(76px + env(safe-area-inset-top))',
         paddingBottom: '12px',
       }}
     >

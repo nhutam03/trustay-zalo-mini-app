@@ -11,7 +11,7 @@ export interface Contract {
 	endDate: string;
 	monthlyRent: number;
 	depositAmount: number;
-	status: 'draft' | 'pending_signatures' | 'active' | 'terminated' | 'expired';
+	status: 'draft' | 'pending_signatures' | 'partially_signed' | 'active' | 'terminated' | 'expired';
 	contractData?: Record<string, unknown>;
 	createdAt: string;
 	updatedAt: string;
@@ -118,9 +118,9 @@ export const getMyContracts = async (params?: {
 };
 
 // Get contract details by ID
-export const getContractById = async (id: string): Promise<{ data: Contract }> => {
+export const getContractById = async (id: string): Promise<Contract> => {
 	try {
-		const response = await apiClient.get<{ data: Contract }>(`/api/contracts/${id}`);
+		const response = await apiClient.get<Contract>(`/api/contracts/${id}`);
 		return response.data;
 	} catch (error) {
 		console.error('Error getting contract by ID:', error);
