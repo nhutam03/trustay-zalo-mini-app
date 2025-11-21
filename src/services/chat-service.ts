@@ -58,9 +58,8 @@ export interface SendMessageData {
 	attachmentUrls?: string[];
 }
 
-export interface SendMessageResponse {
-	data: MessageData;
-}
+// API returns MessageData directly, not wrapped in { data: ... }
+export type SendMessageResponse = MessageData;
 
 export interface ListMessagesResponse {
 	data: MessageData[];
@@ -81,9 +80,7 @@ export async function sendMessage(
 ): Promise<SendMessageResponse> {
 	const response = await apiClient.post<SendMessageResponse>(
 		'/api/chat/messages',
-		{
-			data: messageData,
-		},
+		messageData,
 	);
 	return response.data;
 }
@@ -146,7 +143,7 @@ export async function getOrCreateConversation(
 		);
 
 		// Get the conversation data from the message response
-		const conversationId = result.data.conversationId;
+		const conversationId = result.conversationId;
 
 		// Fetch the full conversation data
 		const conversationsResponse = await getConversations(token);
