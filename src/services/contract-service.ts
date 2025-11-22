@@ -1,56 +1,8 @@
+import { Contract, PaginatedContractResponse } from '@/interfaces/contract-interfaces';
 import { apiClient, extractErrorMessage } from '@/lib/api-client';
 
 // Types
-export interface Contract {
-	id: string;
-	landlordId: string;
-	tenantId: string;
-	roomInstanceId: string;
-	contractType: string;
-	startDate: string;
-	endDate: string;
-	monthlyRent: number;
-	depositAmount: number;
-	status: 'draft' | 'pending_signatures' | 'partially_signed' | 'active' | 'terminated' | 'expired';
-	contractData?: Record<string, unknown>;
-	createdAt: string;
-	updatedAt: string;
-	landlord?: {
-		id: string;
-		firstName: string;
-		lastName: string;
-		fullName: string;
-		email: string;
-		phone?: string;
-	};
-	tenant?: {
-		id: string;
-		firstName: string;
-		lastName: string;
-		fullName: string;
-		email: string;
-		phone?: string;
-	};
-	room?: {
-		id: string;
-		name: string;
-		roomName: string;
-		roomNumber: string;
-		roomType: string;
-		areaSqm: number;
-		buildingName: string;
-	};
-}
 
-export interface PaginatedContractResponse {
-	data: Contract[];
-	meta: {
-		page: number;
-		limit: number;
-		total: number;
-		totalPages: number;
-	};
-}
 
 // Auto-generate contract from rental (Landlord only)
 export const autoGenerateContract = async (
@@ -120,8 +72,14 @@ export const getMyContracts = async (params?: {
 // Get contract details by ID
 export const getContractById = async (id: string): Promise<Contract> => {
 	try {
-		const response = await apiClient.get<Contract>(`/api/contracts/${id}`);
-		return response.data;
+		const response = await apiClient.get<{ data: Contract } | Contract>(`/api/contracts/${id}`);
+		console.log('API Response for contract:', response.data);
+
+		// Check if response has nested data structure
+		if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+			return (response.data as { data: Contract }).data;
+		}
+		return response.data as Contract;
 	} catch (error) {
 		console.error('Error getting contract by ID:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tải chi tiết hợp đồng'));

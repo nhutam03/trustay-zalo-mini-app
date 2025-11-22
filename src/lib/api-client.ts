@@ -246,6 +246,18 @@ const refreshAccessToken = async (): Promise<string | null> => {
   }
 };
 
+// Event để thông báo khi cần logout (token hết hạn hoàn toàn)
+const AUTH_EXPIRED_EVENT = 'auth:expired';
+
+export const onAuthExpired = (callback: () => void) => {
+  window.addEventListener(AUTH_EXPIRED_EVENT, callback);
+  return () => window.removeEventListener(AUTH_EXPIRED_EVENT, callback);
+};
+
+const notifyAuthExpired = () => {
+  window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+};
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: any) => {
@@ -266,7 +278,8 @@ apiClient.interceptors.response.use(
 
       const newToken = await refreshPromise!;
       if (!newToken) {
-        // TODO: tuỳ bạn xử lý: điều hướng sang màn login, v.v.
+        // Token hết hạn hoàn toàn, thông báo cho AuthProvider
+        notifyAuthExpired();
         return Promise.reject(error);
       }
 

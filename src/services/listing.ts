@@ -7,6 +7,7 @@ import {
 	RoomSearchParams,
 	RoomSeekingPublicSearchParams } from '@/interfaces/room-interface';
 import { encodeSearchQuery } from '@/utils/basic';
+import { RoommateSeekingListingResponse } from '@/interfaces/roommate-interface';
 
 /**
  * Search room listings with filters
@@ -44,7 +45,6 @@ export async function searchRoomListings(params: RoomSearchParams): Promise<Room
 		if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
 
 		const endpoint = `/api/listings/rooms?${queryParams.toString()}`;
-		console.log('Calling API endpoint:', endpoint);
 
 		const response = await apiClient.get<RoomListingsResponse>(endpoint);
 		return response.data;
@@ -55,18 +55,18 @@ export async function searchRoomListings(params: RoomSearchParams): Promise<Room
 }
 
 /**
- * Get room detail by id
- */
-export async function getRoomById(id: string): Promise<RoomDetail> {
-	try {
-		const response = await apiClient.get<RoomDetail>(`/api/rooms/public/id/${id}`);
+//  * Get room detail by id
+//  */
+// export async function getRoomById(id: string): Promise<RoomDetail> {
+// 	try {
+// 		const response = await apiClient.get<RoomDetail>(`/api/rooms/public/id/${id}`);
 
-		return response.data;
-	} catch (error: unknown) {
-		console.error('Failed to get room detail:', error);
-		throw error;
-	}
-}
+// 		return response.data;
+// 	} catch (error: unknown) {
+// 		console.error('Failed to get room detail:', error);
+// 		throw error;
+// 	}
+// }
 
 /**
  * Get all room listings without search filter (for internal use)
@@ -135,3 +135,39 @@ export async function listPublicRoomSeekingPosts(
 		throw error;
 	}
 }
+
+// Get listings (public endpoint - similar to room-seekings)
+export const getRoommateSeekingListings = async (
+	params?: {
+		page?: number;
+		limit?: number;
+		sortBy?: 'createdAt' | 'maxBudget' | 'updatedAt';
+		sortOrder?: 'asc' | 'desc';
+	},
+	token?: string,
+): Promise<RoommateSeekingListingResponse> => {
+	try {
+		const searchParams = new URLSearchParams();
+		if (params?.page) searchParams.append('page', params.page.toString());
+		if (params?.limit) searchParams.append('limit', params.limit.toString());
+		if (params?.sortBy) searchParams.append('sortBy', params.sortBy);
+		if (params?.sortOrder) searchParams.append('sortOrder', params.sortOrder);
+
+		const endpoint = `/api/listings/roommate-seeking-posts${
+			searchParams.toString() ? `?${searchParams.toString()}` : ''
+		}`;
+
+		const response = await apiClient<any>(
+			endpoint,
+			{
+				method: 'GET',
+			},
+
+		);
+
+		return response.data || [];
+	} catch (error) {
+		console.error('Error fetching roommate post details:', error);
+    	throw new Error(extractErrorMessage(error, 'Không thể tải thông tin bài đăng'));
+	}
+};

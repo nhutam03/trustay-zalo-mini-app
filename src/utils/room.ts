@@ -1,25 +1,18 @@
 import { RoomListing, RoomListingsResponse } from '../services/room';
 import { RoomCardProps } from '../interfaces/basic';
-import { API_CONFIG } from '../lib/api-client';
 import { processImageUrl } from './image-proxy';
 
 /**
  * Convert RoomListing from API to RoomCardProps format
  */
 export const roomToRoomCard = (room: RoomListing): RoomCardProps => {
-	console.log('Converting room:', room);
-	
 	// Get the primary image or first image or use placeholder
 	const primaryImage = room.images?.find(img => img.isPrimary);
 	const firstImage = room.images?.[0];
 	const imageUrl = primaryImage?.url || firstImage?.url;
-	
-	console.log('Raw image URL from API:', imageUrl);
-	
+
 	// Use the image proxy utility for better Zalo Mini App compatibility
 	const image = processImageUrl(imageUrl);
-	
-	console.log('Final image URL (after proxy processing):', image);
 
 	// Build location string from location object
 	let location = '';
@@ -31,11 +24,9 @@ export const roomToRoomCard = (room: RoomListing): RoomCardProps => {
 	}
 
 	// Get base price from pricing
-	const price = room.pricing?.basePriceMonthly 
-		? parseFloat(room.pricing.basePriceMonthly) 
+	const price = room.pricing?.basePriceMonthly
+		? parseFloat(room.pricing.basePriceMonthly)
 		: 0;
-
-	console.log('Converted:', { id: room.id, title: room.name, price, location, image });
 
 	return {
 		id: room.id, // Use ID for routing
@@ -52,5 +43,10 @@ export const roomToRoomCard = (room: RoomListing): RoomCardProps => {
  * Convert array of RoomListings to RoomCardProps array
  */
 export const roomsToRoomCards = (rooms: RoomListingsResponse): RoomCardProps[] => {
+	if (!rooms || !rooms.data || !Array.isArray(rooms.data)) {
+		console.error('Invalid rooms data structure:', rooms);
+		return [];
+	}
+
 	return rooms.data.map(roomToRoomCard);
 };

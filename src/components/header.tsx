@@ -97,8 +97,12 @@ const Header = () => {
   const handleSearch = (query?: string) => {
     const searchText = query || searchQuery;
     if (searchText.trim()) {
-      navigate(`/explore?search=${encodeURIComponent(searchText)}`);
-      handleCloseSearch();
+      // Navigate FIRST
+      navigate(`/search?q=${encodeURIComponent(searchText)}`);
+      // Close search modal AFTER a small delay to avoid race condition
+      setTimeout(() => {
+        handleCloseSearch();
+      }, 100);
     }
   };
 

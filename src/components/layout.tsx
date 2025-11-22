@@ -11,6 +11,7 @@ import { AppProps } from "zmp-ui/app";
 
 import HomePage from "@/pages/index";
 import ExplorePage from "@/pages/explore-page";
+import SearchPage from "@/pages/search-page";
 import MessagesPage from "@/pages/message-page";
 import ConversationPage from "@/pages/conversation-page";
 import PostRoomPage from "@/pages/post-page";
@@ -38,7 +39,7 @@ import AIAssistantPage from "@/pages/ai-assistant-page";
 import SettingsPage from "@/pages/settings-page";
 import SavedRoomsPage from "@/pages/saved-rooms-page";
 import HelpCenterPage from "@/pages/help-center-page";
-import ProtectedRoute from "./protected-route";
+import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
 import { RecoilRoot } from "recoil";
@@ -92,6 +93,7 @@ const Layout = () => {
                   <Route path="/register" element={<RegisterPage />}></Route>
                   <Route path="/" element={<HomePage />}></Route>
                   <Route path="/explore" element={<ExplorePage />}></Route>
+                  <Route path="/search" element={<SearchPage />}></Route>
                   <Route path="/room/:id" element={<RoomDetailPage />}></Route>
                   <Route path="/room-seeking/:id" element={<RoomSeekingDetailPage />}></Route>
                   <Route path="/roommate/:id" element={<RoommateDetailPage />}></Route>

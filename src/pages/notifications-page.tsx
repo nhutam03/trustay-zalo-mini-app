@@ -145,7 +145,7 @@ const NotificationsPage: React.FC = () => {
 	const unreadCount = notifications.filter((n) => !n.isRead).length;
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			{/* Header actions */}
 			<Box className="bg-white mb-2 px-4 py-3">
 				<div className="flex items-center justify-between mb-3">
@@ -202,8 +202,6 @@ const NotificationsPage: React.FC = () => {
 					</div>
 				)}
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

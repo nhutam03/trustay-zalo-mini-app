@@ -22,13 +22,20 @@ import {
 export const userKeys = {
 	all: ['users'] as const,
 	publicProfile: (userId: string) => [...userKeys.all, 'public', userId] as const,
+	privateProfile: () => [...userKeys.all, 'private', 'me'] as const, // Riêng biệt với auth
 };
 
-export const usePrivateUserProfile = () => {
+// Get private user profile (FULL DATA - for Profile Page)
+// AUTO-FETCH when component mounts
+// API: /api/users/profile (full data)
+export const usePrivateUserProfile = (options?: { enabled?: boolean }) => {
 	return useQuery({
-		queryKey: ['auth', 'me'],
+		queryKey: userKeys.privateProfile(),
 		queryFn: () => getPrivateUserProfile(),
 		staleTime: 5 * 60 * 1000, // 5 minutes
+		enabled: options?.enabled ?? true, // Auto-fetch khi component mount, có thể override
+		refetchOnMount: true, // Fetch lại mỗi khi vào page
+		refetchOnWindowFocus: false, // Không fetch khi focus window
 	});
 }
 
@@ -49,8 +56,9 @@ export const useUpdateUserProfile = () => {
 	return useMutation({
 		mutationFn: (data: UpdateProfileRequest) => updateUserProfile(data),
 		onSuccess: () => {
-			// Invalidate current user query (from auth service)
+			// Invalidate cả auth và private profile
 			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };
@@ -69,8 +77,9 @@ export const useUploadAvatar = () => {
 	return useMutation({
 		mutationFn: (file: File) => uploadAvatar(file),
 		onSuccess: () => {
-			// Invalidate current user query
+			// Invalidate cả auth và private profile
 			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };
@@ -82,8 +91,8 @@ export const useCreateAddress = () => {
 	return useMutation({
 		mutationFn: (data: CreateAddressRequest) => createAddress(data),
 		onSuccess: () => {
-			// Invalidate current user query
-			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			// Address chỉ ảnh hưởng private profile (không có trong auth/me)
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };
@@ -96,8 +105,8 @@ export const useUpdateAddress = () => {
 		mutationFn: ({ addressId, data }: { addressId: string; data: UpdateAddressRequest }) =>
 			updateAddress(addressId, data),
 		onSuccess: () => {
-			// Invalidate current user query
-			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			// Address chỉ ảnh hưởng private profile
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };
@@ -109,8 +118,8 @@ export const useDeleteAddress = () => {
 	return useMutation({
 		mutationFn: (addressId: string) => deleteAddress(addressId),
 		onSuccess: () => {
-			// Invalidate current user query
-			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			// Address chỉ ảnh hưởng private profile
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };
@@ -130,8 +139,9 @@ export const useConfirmChangeEmail = () => {
 		mutationFn: ({ newEmail, otp }: { newEmail: string; otp: string }) =>
 			confirmChangeEmail(newEmail, otp),
 		onSuccess: () => {
-			// Invalidate current user query
+			// Email change ảnh hưởng cả auth và profile
 			queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+			queryClient.invalidateQueries({ queryKey: userKeys.privateProfile() });
 		},
 	});
 };

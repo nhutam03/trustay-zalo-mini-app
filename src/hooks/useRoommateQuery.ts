@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RoommateSeekingPost } from "@/interfaces/roommate-interface";
-import { getRoommateSeekingPostById, getRoommateSeekingListings } from "@/services/roommate-service";
+import { getRoommateSeekingPostById } from "@/services/roommate-service";
+import { getRoommateSeekingListings } from "@/services/listing";
 
 // Query keys
 export const roommateKeys = {
@@ -60,6 +61,7 @@ export const useRoommatePostsList = (page: number = 1, limit: number = 20) => {
     queryFn: () => getRoommateSeekingListings({ page, limit }),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+    
   });
 };
 

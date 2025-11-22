@@ -15,7 +15,7 @@ interface FAQItem {
 interface HelpCategory {
 	id: string;
 	title: string;
-	icon: string;
+	icon: any;
 	description: string;
 	articles: number;
 }
@@ -139,7 +139,7 @@ const HelpCenterPage: React.FC = () => {
 		},
 	];
 
-	const quickActions = [
+	const quickActions: Array<{ id: string; icon: any; label: string; action: string; info?: string }> = [
 		{ id: 'contact', icon: 'zi-chat', label: 'Chat với hỗ trợ', action: 'chat' },
 		{ id: 'call', icon: 'zi-call', label: 'Gọi hotline', action: 'call', info: '1900 xxxx' },
 		{ id: 'email', icon: 'zi-mail', label: 'Gửi email', action: 'email', info: 'support@trustay.vn' },
@@ -175,7 +175,7 @@ const HelpCenterPage: React.FC = () => {
 		: faqs;
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			{/* Search Bar */}
 			<Box className="bg-white mb-2 px-4 py-3">
 				<div className="relative">
@@ -290,8 +290,6 @@ const HelpCenterPage: React.FC = () => {
 					</button>
 				</div>
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

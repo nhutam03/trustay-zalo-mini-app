@@ -8,6 +8,7 @@ import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useRoomDetail, useTrackRoomView } from "@/hooks/useRoomQuery";
 import { getImageProps } from "@/utils/image-proxy";
+import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
 
 const RoomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +20,6 @@ const RoomDetailPage: React.FC = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [validImages, setValidImages] = useState<any[]>([]);
-  const [imagesLoading, setImagesLoading] = useState(true);
 
   // Use TanStack Query
   const { data: room, isLoading: loading, error } = useRoomDetail(id);
@@ -47,7 +47,6 @@ const RoomDetailPage: React.FC = () => {
     if (!room?.images) return;
 
     const validateImages = async () => {
-      setImagesLoading(true);
       const imagePromises = room.images.map((image) => {
         return new Promise((resolve) => {
           const img = new Image();
@@ -60,7 +59,6 @@ const RoomDetailPage: React.FC = () => {
       const results = await Promise.all(imagePromises);
       const valid = results.filter((img: any) => img.valid);
       setValidImages(valid);
-      setImagesLoading(false);
     };
 
     validateImages();
@@ -128,13 +126,9 @@ const RoomDetailPage: React.FC = () => {
   }
 
   return (
-    <Page className="bg-gray-50 has-bottom-nav">
+    <Page className="bg-gray-50 page-with-bottom-nav">
       {/* Image Gallery */}
-      {imagesLoading ? (
-        <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
-          <Spinner />
-        </div>
-      ) : validImages.length > 0 ? (
+      {validImages.length > 0 ? (
         <div className="relative">
           <PhotoProvider>
             <div
@@ -203,7 +197,7 @@ const RoomDetailPage: React.FC = () => {
         <div>
           <div className="flex flex-wrap gap-2 mb-2">
             <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
-              {room.roomType}
+              {ROOM_TYPE_LABELS[room.roomType] || room.roomType}
             </span>
             <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
               {room.maxOccupancy} người
@@ -490,13 +484,10 @@ const RoomDetailPage: React.FC = () => {
             </div>
           </div>
         )}
-
-        {/* Spacer for bottom nav */}
-        <div className="h-24"></div>
       </Box>
 
       {/* Fixed Bottom Action Buttons */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
         <div className="flex gap-2">
           <Button
             variant="secondary"
@@ -521,8 +512,6 @@ const RoomDetailPage: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      <BottomNav />
     </Page>
   );
 };

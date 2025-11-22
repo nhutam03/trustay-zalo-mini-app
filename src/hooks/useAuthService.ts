@@ -26,13 +26,18 @@ export const authKeys = {
 };
 
 // Get current user
+// CHÚ Ý: Hook này CHỈ nên dùng để lấy data từ cache (set bởi AuthProvider)
+// KHÔNG tự động fetch để tránh race condition và request bị cancelled
 export const useCurrentUser = () => {
 	return useQuery({
 		queryKey: authKeys.me(),
 		queryFn: getCurrentUser,
-		enabled: isAuthenticated(),
-		staleTime: 5 * 60 * 1000, // 5 minutes
+		enabled: false, // DISABLE auto-fetch, chỉ lấy từ cache
+		staleTime: Infinity, // Cache mãi mãi, chỉ invalidate khi logout/login
 		retry: false,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});
 };
 

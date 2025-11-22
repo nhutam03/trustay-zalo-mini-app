@@ -65,7 +65,7 @@ export interface RoomListing {
 		type: string;
 		customValue?: string | null;
 		notes?: string | null;
-		isEnforced: boolean;
+		isEnforced?: boolean;
 	}>;
 	buildingId: string;
 	description?: string;

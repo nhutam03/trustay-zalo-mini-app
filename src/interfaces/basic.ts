@@ -231,6 +231,8 @@ export const ROOM_TYPES = {
 	APARTMENT: 'apartment',
 	HOUSE: 'house',
 	STUDIO: 'studio',
+	MONITORY: 'monitory',
+	SLEEP_BOX: 'sleep_box',
 } as const;
 
 export const CURRENCIES = {
@@ -251,6 +253,8 @@ export const ROOM_TYPE_LABELS = {
 	[ROOM_TYPES.APARTMENT]: 'Căn hộ',
 	[ROOM_TYPES.HOUSE]: 'Nhà nguyên căn',
 	[ROOM_TYPES.STUDIO]: 'Studio',
+	[ROOM_TYPES.MONITORY]: 'Ký túc xá',
+	[ROOM_TYPES.SLEEP_BOX]: 'Sleep box',
 } as const;
 
 // Currency labels for display

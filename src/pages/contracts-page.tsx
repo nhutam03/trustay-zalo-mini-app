@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import BottomNav from '@/components/navigate-bottom';
-import { getMyContracts, Contract } from '@/services/contract-service';
+import { getMyContracts } from '@/services/contract-service';
+import { Contract } from '@/interfaces/contract-interfaces';
 
 const ContractsPage: React.FC = () => {
 	const setHeader = useSetHeader();
@@ -128,7 +129,7 @@ const ContractsPage: React.FC = () => {
 	};
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			{/* Filter tabs */}
 			<Box className="bg-white mb-2 px-4 py-2">
 				<div className="flex gap-2 overflow-x-auto pt-3">
@@ -172,8 +173,6 @@ const ContractsPage: React.FC = () => {
 					</div>
 				)}
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

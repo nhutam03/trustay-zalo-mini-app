@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRoomSeekingPostById, RoomSeekingPost } from "@/services/room-seeking-service";
+import { listPublicRoomSeekingPosts } from "@/services/listing";
+import { RoomSeekingPublicSearchParams } from "@/interfaces/room-interface";
 
 // Query keys
 export const roomSeekingKeys = {
   all: ["room-seeking"] as const,
   lists: () => [...roomSeekingKeys.all, "list"] as const,
-  list: (filters: string) => [...roomSeekingKeys.lists(), { filters }] as const,
+  list: (params: RoomSeekingPublicSearchParams) => [...roomSeekingKeys.lists(), params] as const,
   details: () => [...roomSeekingKeys.all, "detail"] as const,
   detail: (id: string) => [...roomSeekingKeys.details(), id] as const,
   recentlyViewed: () => [...roomSeekingKeys.all, "recently-viewed"] as const,
@@ -61,5 +63,15 @@ export const useRecentlyViewedRoomSeekingPosts = () => {
       return stored ? JSON.parse(stored) : [];
     },
     staleTime: Infinity, // Never goes stale automatically
+  });
+};
+
+// Hook to search/list room seeking posts with pagination
+export const useRoomSeekingPostsList = (params: RoomSeekingPublicSearchParams = {}) => {
+  return useQuery({
+    queryKey: roomSeekingKeys.list(params),
+    queryFn: () => listPublicRoomSeekingPosts(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
   });
 };

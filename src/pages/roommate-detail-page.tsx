@@ -108,7 +108,7 @@ const RoommateDetailPage: React.FC = () => {
   }
 
   return (
-    <Page className="bg-gray-50 has-bottom-nav">
+    <Page className="bg-gray-50">
       <Box className="p-4 space-y-4">
         {/* Header Section */}
         <div className="bg-white rounded-lg p-4 border border-gray-200">
@@ -445,7 +445,6 @@ const RoommateDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <BottomNav />
     </Page>
   );
 };

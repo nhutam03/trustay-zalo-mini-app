@@ -13,7 +13,7 @@ const ProfileDetailPage: React.FC = () => {
   const setHeader = useSetHeader();
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
-  const { data: user, isLoading: isLoadingProfile } = usePrivateUserProfile();
+  const { data: user, isLoading: isLoadingProfile} = usePrivateUserProfile();
   const uploadAvatarMutation = useUploadAvatar();
   const uploadImageMutation = useUploadSingleImage();
 
@@ -87,6 +87,17 @@ const ProfileDetailPage: React.FC = () => {
     changeStatusBarColor("primary");
   }, [avatarChanged, uploadAvatarMutation.isPending, handleSave]);
 
+
+    // Fetch profile data khi component mount (CHỈ 1 LẦN)
+    useEffect(() => {
+      if ( !user) {
+        console.log("Fetching user profile data...");
+      }
+    }, [user]);
+  
+    useEffect(() => {
+      user && console.log("User data in ProfilePage:", user);
+    }, [user]);
   // Show loading state
   if (isLoadingProfile) {
     return (

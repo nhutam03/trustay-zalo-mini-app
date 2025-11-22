@@ -118,7 +118,7 @@ const RentalsPage: React.FC = () => {
 	);
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			{/* Filter tabs */}
 			<Box className="bg-white mb-2 px-4 py-3">
 				<div className="flex gap-2 overflow-x-auto">
@@ -166,8 +166,6 @@ const RentalsPage: React.FC = () => {
 					</div>
 				)}
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

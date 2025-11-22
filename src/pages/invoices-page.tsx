@@ -133,7 +133,7 @@ const InvoicesPage: React.FC = () => {
 	const stats = calculateStats();
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			{/* Stats Summary */}
 			<Box className="bg-white mb-2 px-4 py-3">
 				<div className="grid grid-cols-3 gap-3">
@@ -169,7 +169,7 @@ const InvoicesPage: React.FC = () => {
 					].map((tab) => (
 						<button
 							key={tab.key}
-							onClick={() => setFilter(tab.key)}
+							onClick={() => setFilter(tab.key as 'all' | BillStatus)}
 							className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
 								filter === tab.key
 									? 'bg-primary text-white'
@@ -199,8 +199,6 @@ const InvoicesPage: React.FC = () => {
 					</div>
 				)}
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

@@ -17,7 +17,7 @@ const SavedRoomsPage: React.FC = () => {
 	}, []);
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			<Box className="px-4 py-2">
 				{/* Coming Soon Section */}
 				<div className="flex flex-col items-center justify-center py-16">
@@ -65,7 +65,7 @@ const SavedRoomsPage: React.FC = () => {
 						<div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
 							<div className="flex items-start gap-3">
 								<div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-									<Icon icon="zi-list" size={24} className="text-primary" />
+									<Icon icon="zi-list-1" size={24} className="text-primary" />
 								</div>
 								<div className="flex-1">
 									<h4 className="font-semibold text-gray-900 mb-1">So sánh dễ dàng</h4>
@@ -84,8 +84,6 @@ const SavedRoomsPage: React.FC = () => {
 					</div>
 				</div>
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

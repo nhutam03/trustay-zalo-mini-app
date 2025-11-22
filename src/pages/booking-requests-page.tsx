@@ -170,7 +170,7 @@ const BookingRequestsPage: React.FC = () => {
 	);
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			<Box className="bg-white mb-2">
 				<Tabs
 					activeKey={activeTab}
@@ -206,8 +206,6 @@ const BookingRequestsPage: React.FC = () => {
 					</>
 				)}
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

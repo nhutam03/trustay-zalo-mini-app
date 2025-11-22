@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Spinner } from "zmp-ui";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   isAuthenticated,
   getCurrentUser,
@@ -8,6 +9,8 @@ import {
   getZaloUserInfo,
   type UserProfile,
 } from "@/services/auth-service";
+import { authKeys } from "@/hooks/useAuthService";
+import { onAuthExpired } from "@/lib/api-client";
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -33,176 +36,115 @@ interface AuthProviderProps {
 }
 
 /**
- * AuthProvider - Tự động đăng nhập khi app khởi động
+ * AuthProvider - Quản lý authentication state
  *
- * Flow:
- * 1. App khởi động → Check có token trong storage không
- * 2. Nếu có token → Verify với backend
- * 3. Nếu không có token hoặc token hết hạn → Auto login với Zalo
- * 4. Lấy Zalo access token (không cần user tương tác)
- * 5. Gửi lên backend để đăng nhập
- * 6. Lưu JWT token và hiển thị app
+ * Flow (Lazy Authentication):
+ * 1. App khởi động → Check có token trong LOCAL STORAGE (KHÔNG gọi API)
+ * 2. Nếu có token → Set isLoggedIn = true (app render ngay lập tức)
+ * 3. Khi user gọi API đầu tiên → Auto verify token via refresh interceptor
+ * 4. Nếu token expired → Auto refresh → Retry
+ * 5. Nếu refresh token expired → User cần login lại
+ *
+ * Benefits:
+ * - Zero API calls on app start → Instant load
+ * - Auto verify token on first API call
+ * - Better UX - không bị block bởi network
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // No loading on init
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // React Query client for cache management
+  const queryClient = useQueryClient();
+
+  // Prevent multiple concurrent calls
+  const fetchingUserRef = useRef(false);
+  const initRef = useRef(false);
+
   useEffect(() => {
-    initAuth();
+    // Only run once on mount
+    if (!initRef.current) {
+      initRef.current = true;
+      initAuth();
+    }
+
+    // Lắng nghe event token hết hạn từ API interceptor
+    const unsubscribe = onAuthExpired(() => {
+      console.log("Auth expired, logging out...");
+      setUser(null);
+      setIsLoggedIn(false);
+      // DON'T clear all cache - it will kill ongoing queries!
+      // queryClient.clear();
+    });
+
+    return unsubscribe;
   }, []);
 
   /**
    * Khởi tạo authentication khi app start
+   * CHỈ CHECK LOCAL STORAGE - KHÔNG GỌI API
    */
-  const initAuth = async () => {
-    try {
-      setLoading(true);
+  const initAuth = () => {
+    console.log("Initializing auth (local check only)...");
 
-      // Check if already has valid token
-      if (isAuthenticated()) {
-        try {
-          // Try to get current user to verify token is valid
-          const userInfo = await getCurrentUser();
-          setUser(userInfo);
-          setIsLoggedIn(true);
-          setLoading(false);
-          return;
-        } catch (error) {
-          console.log("Token expired or invalid, performing auto-login...");
-          // Token invalid, continue to auto-login
-        }
-      }
-
-      // No valid token → Perform silent login with Zalo
-      await performAutoLogin();
-    } catch (error) {
-      console.error("Auth initialization failed:", error);
-      // Even if login fails, we still show the app
-      // Some features will require login and show login prompt
-      setLoading(false);
-    }
-  };
-
-  /**
-   * Tự động đăng nhập bằng Zalo (auto login)
-   *
-   * Flow:
-   * 1. Lấy số điện thoại từ Zalo (nếu được phê duyệt)
-   * 2. Gọi API login → Backend kiểm tra user đã tồn tại chưa
-   * 3. Nếu tồn tại → Đăng nhập thành công
-   * 4. Nếu chưa tồn tại → Để user tiếp tục dùng app (chưa đăng nhập)
-   */
-  const performAutoLogin = async () => {
-    try {
-      console.log("Attempting auto-login with Zalo phone...");
-
-      // Thử lấy số điện thoại từ Zalo (cần được phê duyệt bởi Zalo)
-      const zaloInfo = await getZaloUserInfo(true);
-
-      if (!zaloInfo.phone) {
-        console.log("Phone number not available, user can browse without login");
-        return;
-      }
-
-      // Thử đăng nhập bằng số điện thoại
-      const loginResponse = await loginWithZaloPhone(zaloInfo.phone);
-
-      setUser(loginResponse.user);
+    // Check if token exists in local storage (sync, no API call)
+    if (isAuthenticated()) {
+      console.log("Token found in storage, user is logged in");
       setIsLoggedIn(true);
-
-      console.log("Auto-login successful:", loginResponse.user);
-    } catch (error: any) {
-      console.error("Auto-login failed:", error);
-
-      // Không cần chuyển hướng, để user tiếp tục dùng app
-      // User có thể đăng ký sau bằng cách nhấn nút đăng ký ở trang Profile
-      console.log("User not logged in, can browse app without authentication");
-    } finally {
-      setLoading(false);
+      // Note: We don't fetch user data here
+      // First API call will auto-verify token via interceptor
+    } else {
+      console.log("No token found, user is not logged in");
+      setIsLoggedIn(false);
     }
+
+    // App is ready immediately (no loading needed)
+    console.log("Auth initialized, app ready");
   };
 
   /**
-   * Manual login (for retry or explicit login)
+   * Manual login placeholder
+   * Actual login happens in LoginPage using auth-service directly
+   * This just updates local state after successful login
    */
   const login = async () => {
-    try {
-      setLoading(true);
-      await performAutoLogin();
-    } finally {
-      setLoading(false);
+    // After login via auth-service, update state
+    if (isAuthenticated()) {
+      setIsLoggedIn(true);
     }
   };
 
   /**
-   * Logout
+   * Logout - Clear tokens and state
    */
   const logout = async () => {
     try {
-      setLoading(true);
-      await logoutService();
+      await logoutService(); // Calls API + clears tokens
       setUser(null);
       setIsLoggedIn(false);
+
+      // Clear ALL React Query cache
+      queryClient.clear();
     } catch (error) {
       console.error("Logout error:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
   /**
    * Refresh user info
+   * In lazy auth, this just invalidates cache
+   * Components will refetch data automatically
    */
   const refreshUser = async () => {
-    try {
-      const userInfo = await getCurrentUser();
-      setUser(userInfo);
-      setIsLoggedIn(true);
-    } catch (error) {
-      console.error("Failed to refresh user:", error);
-      setUser(null);
-      setIsLoggedIn(false);
-    }
+    console.log("Refreshing user data...");
+    // Invalidate all user-related cache
+    // Components using queries will refetch automatically
+    queryClient.invalidateQueries({ queryKey: authKeys.all });
+    queryClient.invalidateQueries({ queryKey: ['users'] });
   };
 
-  // Show splash screen while initializing
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-        <div className="text-center">
-          {/* Logo */}
-          <div className="w-24 h-24 bg-primary rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse">
-            <svg
-              className="w-12 h-12 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-          </div>
-
-          {/* App Name */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Trustay</h1>
-          <p className="text-gray-600 text-sm mb-8">
-            Tìm phòng trọ uy tín, dễ dàng
-          </p>
-
-          {/* Loading Spinner */}
-          <div className="flex justify-center">
-            <Spinner />
-          </div>
-          <p className="mt-4 text-sm text-gray-600">Đang khởi động...</p>
-        </div>
-      </div>
-    );
-  }
+  // No loading screen needed - app renders immediately
 
   return (
     <AuthContext.Provider

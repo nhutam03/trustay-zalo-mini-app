@@ -199,7 +199,7 @@ const SettingsPage: React.FC = () => {
 	);
 
 	return (
-		<Page className="bg-gray-50 has-bottom-nav">
+		<Page className="bg-gray-50">
 			<Box className="px-4 py-2">
 				{settingSections.map((section, sectionIndex) => (
 					<div key={sectionIndex} className="mb-6">
@@ -248,8 +248,6 @@ const SettingsPage: React.FC = () => {
 					<p className="mt-1">© 2025 TruStay. All rights reserved.</p>
 				</div>
 			</Box>
-
-			<BottomNav />
 		</Page>
 	);
 };

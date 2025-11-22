@@ -3,8 +3,9 @@ import { Page, Box, Icon, Button } from 'zmp-ui';
 import { useParams, useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
-import { getContractById, Contract, generateContractPDF, signContract, requestSigningOTP } from '@/services/contract-service';
+import { getContractById, generateContractPDF, signContract, requestSigningOTP } from '@/services/contract-service';
 import { useAuth } from '@/components/providers/auth-provider';
+import { Contract } from '@/interfaces/contract-interfaces';
 
 const ContractDetailPage: React.FC = () => {
 	const { id } = useParams();
@@ -35,9 +36,13 @@ const ContractDetailPage: React.FC = () => {
 	const loadContractDetails = async () => {
 		try {
 			setLoading(true);
-			const contract = await getContractById(id!);
-			console.log('Contract loaded:', contract);
-			setContract(contract);
+			const contractData = await getContractById(id!);
+			console.log('Contract loaded:', contractData);
+			console.log('Contract status:', contractData?.status);
+			console.log('Contract room:', contractData?.room);
+			console.log('Contract landlord:', contractData?.landlord);
+			console.log('Contract tenant:', contractData?.tenant);
+			setContract(contractData);
 		} catch (error) {
 			console.error('Error loading contract details:', error);
 		} finally {
@@ -92,15 +97,16 @@ const ContractDetailPage: React.FC = () => {
 	};
 
 	const getStatusBadge = (status: string) => {
-		const statusConfig = {
+		const statusConfig: Record<string, { text: string; color: string }> = {
 			draft: { text: 'Nháp', color: 'bg-gray-100 text-gray-800' },
 			pending_signatures: { text: 'Chờ ký', color: 'bg-yellow-100 text-yellow-800' },
-			partially_signed: { text: 'Đã ký một phần', color: 'bg-blue-100 text-blue-800' },
+			partially_signed: { text: 'Chờ ký (đã ký 1 bên)', color: 'bg-blue-100 text-blue-800' },
 			active: { text: 'Đang hiệu lực', color: 'bg-green-100 text-green-800' },
 			terminated: { text: 'Đã chấm dứt', color: 'bg-red-100 text-red-800' },
 			expired: { text: 'Hết hạn', color: 'bg-gray-100 text-gray-600' },
 		};
-		const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+
+		const config = statusConfig[status] || statusConfig.draft;
 		return (
 			<span className={`px-3 py-1 rounded-full text-xs font-medium ${config.color}`}>
 				{config.text}
@@ -129,8 +135,18 @@ const ContractDetailPage: React.FC = () => {
 		);
 	}
 
-	const monthlyRent = contract.monthlyRent || (contract.contractData as any)?.financial?.monthlyRent || (contract.contractData as any)?.monthlyRent;
-	const depositAmount = contract.depositAmount || (contract.contractData as any)?.financial?.deposit || (contract.contractData as any)?.depositAmount;
+	// Lấy data từ contractData
+	const monthlyRent = (contract.contractData as any)?.financial?.monthlyRent || (contract.contractData as any)?.monthlyRent || contract.monthlyRent;
+	const depositAmount = (contract.contractData as any)?.financial?.deposit || (contract.contractData as any)?.depositAmount || contract.depositAmount;
+
+	// Kiểm tra user hiện tại đã ký chưa
+	const userRole = user?.id === contract.landlord?.id ? 'landlord' : user?.id === contract.tenant?.id ? 'tenant' : null;
+	const signatures = (contract as any).signatures || [];
+	const hasUserSigned = signatures.some((sig: any) => sig.signerRole === userRole);
+
+	console.log('User role:', userRole);
+	console.log('Signatures:', signatures);
+	console.log('Has user signed:', hasUserSigned);
 
 	return (
 		<Page className="bg-gray-50">
@@ -251,6 +267,158 @@ const ContractDetailPage: React.FC = () => {
 					</div>
 				)}
 
+				{/* Financial Details */}
+				{(contract.contractData as any)?.financial && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">Thông tin tài chính</h3>
+						<div className="space-y-2">
+							{(contract.contractData as any).financial.monthlyRent && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Tiền thuê hàng tháng:</span>
+									<span className="font-medium text-gray-900">
+										{Number((contract.contractData as any).financial.monthlyRent).toLocaleString('vi-VN')} đ
+									</span>
+								</div>
+							)}
+							{(contract.contractData as any).financial.deposit && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Tiền đặt cọc:</span>
+									<span className="font-medium text-gray-900">
+										{Number((contract.contractData as any).financial.deposit).toLocaleString('vi-VN')} đ
+										{(contract.contractData as any).financial.depositMonths &&
+											` (${(contract.contractData as any).financial.depositMonths} tháng)`
+										}
+									</span>
+								</div>
+							)}
+							{(contract.contractData as any).financial.electricityPrice && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Giá điện:</span>
+									<span className="font-medium text-gray-900">
+										{Number((contract.contractData as any).financial.electricityPrice).toLocaleString('vi-VN')} đ/kWh
+									</span>
+								</div>
+							)}
+							{(contract.contractData as any).financial.waterPrice && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Giá nước:</span>
+									<span className="font-medium text-gray-900">
+										{Number((contract.contractData as any).financial.waterPrice).toLocaleString('vi-VN')} đ/m³
+									</span>
+								</div>
+							)}
+							{(contract.contractData as any).financial.paymentMethod && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Phương thức thanh toán:</span>
+									<span className="font-medium text-gray-900">
+										{(contract.contractData as any).financial.paymentMethod}
+									</span>
+								</div>
+							)}
+							{(contract.contractData as any).financial.paymentDueDate && (
+								<div className="flex justify-between text-sm">
+									<span className="text-gray-600">Hạn thanh toán:</span>
+									<span className="font-medium text-gray-900">
+										Ngày {(contract.contractData as any).financial.paymentDueDate} hàng tháng
+									</span>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{/* Terms and Conditions */}
+				{(contract.contractData as any)?.terms && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">Điều khoản hợp đồng</h3>
+
+						{/* Utilities */}
+						{(contract.contractData as any).terms.utilities?.length > 0 && (
+							<div className="mb-4">
+								<p className="text-sm font-medium text-gray-700 mb-2">Tiện ích:</p>
+								<div className="flex flex-wrap gap-2">
+									{(contract.contractData as any).terms.utilities.map((utility: string, index: number) => (
+										<span key={index} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
+											{utility}
+										</span>
+									))}
+								</div>
+							</div>
+						)}
+
+						{/* Rules */}
+						{(contract.contractData as any).terms.rules?.length > 0 && (
+							<div className="mb-4">
+								<p className="text-sm font-medium text-gray-700 mb-2">Quy định:</p>
+								<ul className="space-y-1">
+									{(contract.contractData as any).terms.rules.map((rule: string, index: number) => (
+										<li key={index} className="flex items-start text-sm text-gray-600">
+											<Icon icon="zi-check-circle" size={16} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+											<span>{rule}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+
+						{/* Restrictions */}
+						{(contract.contractData as any).terms.restrictions?.length > 0 && (
+							<div className="mb-4">
+								<p className="text-sm font-medium text-gray-700 mb-2">Hạn chế:</p>
+								<ul className="space-y-1">
+									{(contract.contractData as any).terms.restrictions.map((restriction: string, index: number) => (
+										<li key={index} className="flex items-start text-sm text-gray-600">
+											<Icon icon="zi-close-circle" size={16} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+											<span>{restriction}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+					</div>
+				)}
+
+				{/* Responsibilities */}
+				{(contract.contractData as any)?.terms?.responsibilities && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">Trách nhiệm hai bên</h3>
+
+						{/* Landlord Responsibilities */}
+						{((contract.contractData as any).terms.responsibilities.landlord?.length > 0 ||
+						  (contract.contractData as any).terms.landlordResponsibilities?.length > 0) && (
+							<div className="mb-4">
+								<p className="text-sm font-medium text-gray-700 mb-2">Chủ nhà:</p>
+								<ul className="space-y-1">
+									{((contract.contractData as any).terms.responsibilities.landlord ||
+									  (contract.contractData as any).terms.landlordResponsibilities).map((resp: string, index: number) => (
+										<li key={index} className="flex items-start text-sm text-gray-600">
+											<span className="text-primary mr-2 flex-shrink-0">•</span>
+											<span>{resp}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+
+						{/* Tenant Responsibilities */}
+						{((contract.contractData as any).terms.responsibilities.tenant?.length > 0 ||
+						  (contract.contractData as any).terms.tenantResponsibilities?.length > 0) && (
+							<div>
+								<p className="text-sm font-medium text-gray-700 mb-2">Người thuê:</p>
+								<ul className="space-y-1">
+									{((contract.contractData as any).terms.responsibilities.tenant ||
+									  (contract.contractData as any).terms.tenantResponsibilities).map((resp: string, index: number) => (
+										<li key={index} className="flex items-start text-sm text-gray-600">
+											<span className="text-primary mr-2 flex-shrink-0">•</span>
+											<span>{resp}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						)}
+					</div>
+				)}
+
 				{/* Contract Timeline */}
 				<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
 					<h3 className="font-semibold text-gray-900 mb-3">Thời gian</h3>
@@ -267,12 +435,60 @@ const ContractDetailPage: React.FC = () => {
 								{new Date(contract.updatedAt).toLocaleString('vi-VN')}
 							</p>
 						</div>
+						{(contract as any).signedAt && (
+							<div>
+								<p className="text-xs text-gray-500 mb-1">Ngày ký</p>
+								<p className="text-sm text-gray-900">
+									{new Date((contract as any).signedAt).toLocaleString('vi-VN')}
+								</p>
+							</div>
+						)}
+					</div>
+				</div>
+
+				{/* Signature Status */}
+				<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+					<h3 className="font-semibold text-gray-900 mb-3">Trạng thái ký</h3>
+					<div className="space-y-2">
+						{contract.landlord && (
+							<div className="flex items-center justify-between">
+								<div className="flex items-center">
+									<Icon icon="zi-user" size={16} className="text-gray-400 mr-2" />
+									<span className="text-sm text-gray-600">Chủ nhà</span>
+								</div>
+								{signatures.some((sig: any) => sig.signerRole === 'landlord') ? (
+									<span className="flex items-center text-sm text-green-600">
+										<Icon icon="zi-check-circle-solid" size={16} className="mr-1" />
+										Đã ký
+									</span>
+								) : (
+									<span className="text-sm text-yellow-600">Chưa ký</span>
+								)}
+							</div>
+						)}
+						{contract.tenant && (
+							<div className="flex items-center justify-between">
+								<div className="flex items-center">
+									<Icon icon="zi-user" size={16} className="text-gray-400 mr-2" />
+									<span className="text-sm text-gray-600">Người thuê</span>
+								</div>
+								{signatures.some((sig: any) => sig.signerRole === 'tenant') ? (
+									<span className="flex items-center text-sm text-green-600">
+										<Icon icon="zi-check-circle-solid" size={16} className="mr-1" />
+										Đã ký
+									</span>
+								) : (
+									<span className="text-sm text-yellow-600">Chưa ký</span>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 
 				{/* Actions */}
 				<div className="space-y-3 mb-6">
-					{(contract.status === 'pending_signatures' || contract.status === 'partially_signed') && (
+					{/* Chỉ hiển thị nút ký nếu: chưa ký và status đang chờ ký */}
+					{!hasUserSigned && (contract.status === 'pending_signatures' || contract.status === 'partially_signed') && (
 						<>
 							{!otpSent ? (
 								<Button
@@ -303,6 +519,13 @@ const ContractDetailPage: React.FC = () => {
 								</>
 							)}
 						</>
+					)}
+					{hasUserSigned && (contract.status === 'pending_signatures' || contract.status === 'partially_signed') && (
+						<div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+							<Icon icon="zi-check-circle-solid" size={24} className="text-green-600 mb-1" />
+							<p className="text-sm text-green-700 font-medium">Bạn đã ký hợp đồng này</p>
+							<p className="text-xs text-green-600 mt-1">Đang chờ bên còn lại ký</p>
+						</div>
 					)}
 					<Button
 						fullWidth

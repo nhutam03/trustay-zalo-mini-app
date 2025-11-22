@@ -1,11 +1,13 @@
-import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRoomById, RoomDetail } from "@/services/room";
+import { searchRoomListings } from "@/services/listing";
+import { RoomSearchParams } from "@/interfaces/room-interface";
 
 // Query keys
 export const roomKeys = {
   all: ["rooms"] as const,
   lists: () => [...roomKeys.all, "list"] as const,
-  list: (filters: string) => [...roomKeys.lists(), { filters }] as const,
+  list: (params: RoomSearchParams) => [...roomKeys.lists(), params] as const,
   details: () => [...roomKeys.all, "detail"] as const,
   detail: (id: string) => [...roomKeys.details(), id] as const,
   recentlyViewed: () => [...roomKeys.all, "recently-viewed"] as const,
@@ -64,11 +66,12 @@ export const useRecentlyViewedRooms = () => {
   });
 };
 
-// Prefetch room detail - useful when hovering over room cards
-export const prefetchRoomDetail = (queryClient: QueryClient, roomId: string) => {
-  return queryClient.prefetchQuery({
-    queryKey: roomKeys.detail(roomId),
-    queryFn: () => getRoomById(roomId),
-    staleTime: 5 * 60 * 1000,
+// Hook to search/list rooms with pagination
+export const useRoomsList = (params: RoomSearchParams) => {
+  return useQuery({
+    queryKey: roomKeys.list(params),
+    queryFn: () => searchRoomListings(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache
   });
 };

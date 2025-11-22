@@ -8,7 +8,7 @@ import { useSnackbar } from "zmp-ui";
 const EditNamePage: React.FC = () => {
   const navigate = useNavigate();
   const { openSnackbar } = useSnackbar();
-  const { data: user } = usePrivateUserProfile();
+  const { data: user, refetch } = usePrivateUserProfile();
   const updateProfileMutation = useUpdateUserProfile();
 
   const [formData, setFormData] = useState({
@@ -22,6 +22,7 @@ const EditNamePage: React.FC = () => {
   });
 
   useEffect(() => {
+    refetch();
     if (user) {
       const data = {
         firstName: user.firstName || "",

@@ -1,18 +1,21 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from 'zmp-ui';
+import { useAuth } from './providers/auth-provider';
 
 /**
  * Floating Action Button để truy cập nhanh AI Assistant
  * Hiển thị ở góc dưới bên phải màn hình
+ * Chỉ hiển thị khi đã đăng nhập
  * Ẩn khi đang ở trang AI Assistant
  */
 const AIFloatingButton: React.FC = () => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const { isLoggedIn } = useAuth();
 
-	// Ẩn button khi đang ở trang AI Assistant
-	if (location.pathname === '/ai-assistant') {
+	// Ẩn button khi chưa đăng nhập hoặc đang ở trang AI Assistant
+	if (!isLoggedIn || location.pathname === '/ai-assistant') {
 		return null;
 	}
 
