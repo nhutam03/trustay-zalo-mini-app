@@ -78,7 +78,7 @@ const RentalsPage: React.FC = () => {
 					<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 					<span className="text-gray-600">
 						{new Date(rental.createdAt).toLocaleDateString('vi-VN')}
-						{rental.endDate && ` - ${new Date(rental.endDate).toLocaleDateString('vi-VN')}`}
+						{rental.contractEndDate && ` - ${new Date(rental.contractEndDate).toLocaleDateString('vi-VN')}`}
 					</span>
 				</div>
 				<div className="flex items-center text-sm">

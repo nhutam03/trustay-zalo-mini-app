@@ -3,11 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Page, Box, Button, Icon, Spinner } from "zmp-ui";
 import { PhotoProvider, PhotoView } from "react-photo-view";
 import "react-photo-view/dist/react-photo-view.css";
+import parse from "html-react-parser";
 import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useRoomDetail, useTrackRoomView } from "@/hooks/useRoomQuery";
-import { getImageProps } from "@/utils/image-proxy";
+import { getImageProps, processImageUrl } from "@/utils/image-proxy";
 import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
 
 const RoomDetailPage: React.FC = () => {
@@ -374,11 +375,11 @@ const RoomDetailPage: React.FC = () => {
             Mô tả chi tiết
           </h3>
           <div
-            className={`text-sm text-gray-700 whitespace-pre-line ${
+            className={`text-sm text-gray-700 prose prose-sm max-w-none ${
               !isDescriptionExpanded ? "line-clamp-3" : ""
             }`}
           >
-            {room.description || room.name}
+            {room.description ? parse(room.description) : room.name}
           </div>
           <button
             onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
@@ -406,7 +407,7 @@ const RoomDetailPage: React.FC = () => {
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               {room.owner.avatarUrl ? (
                 <img
-                  src={room.owner.avatarUrl}
+                  src={processImageUrl(room.owner.avatarUrl)}
                   alt={room.owner.name}
                   className="w-full h-full rounded-full object-cover"
                 />

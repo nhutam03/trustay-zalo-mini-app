@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Page, Box, Button, Icon, Spinner } from "zmp-ui";
+import parse from "html-react-parser";
 import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
@@ -206,11 +207,11 @@ const RoomSeekingDetailPage: React.FC = () => {
             Mô tả chi tiết
           </h3>
           <div
-            className={`text-sm text-gray-700 whitespace-pre-line ${
+            className={`text-sm text-gray-700 prose prose-sm max-w-none ${
               !isDescriptionExpanded ? "line-clamp-3" : ""
             }`}
           >
-            {post.description || "Không có mô tả"}
+            {post.description ? parse(post.description) : "Không có mô tả"}
           </div>
           {post.description && post.description.length > 150 && (
             <button

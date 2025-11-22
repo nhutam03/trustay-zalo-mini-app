@@ -38,7 +38,7 @@ const RentalDetailPage: React.FC = () => {
 		try {
 			setLoading(true);
 			const response = await getRentalById(id!);
-			setRental(response.data);
+			setRental(response);
 		} catch (error) {
 			console.error('Error loading rental details:', error);
 		} finally {
@@ -128,34 +128,56 @@ const RentalDetailPage: React.FC = () => {
 				<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
 					<div className="flex justify-between items-start mb-3">
 						<div className="flex-1">
-							<h2 className="text-lg font-bold text-gray-900 mb-1">
-								{rental.roomInstance?.room?.name || 'Phòng không xác định'}
-							</h2>
-							<p className="text-sm text-gray-600">
-								Phòng {rental.roomInstance?.roomNumber} - {rental.roomInstance?.room?.building?.name}
-							</p>
-							{rental.roomInstance?.room?.building?.address && (
-								<p className="text-xs text-gray-500 mt-1">
-									{rental.roomInstance.room.building.address}
+							<div
+								className="cursor-pointer"
+								onClick={() => rental.roomInstance?.room?.slug && navigate(`/room/${rental.roomInstance.room.slug}`)}
+							>
+								<h2 className="text-lg font-bold text-gray-900 mb-1 hover:text-primary transition-colors">
+									{rental.roomInstance?.room?.name || 'Phòng không xác định'}
+									{rental.roomInstance?.room?.slug && (
+										<Icon icon="zi-chevron-right" size={16} className="inline ml-1" />
+									)}
+								</h2>
+								<p className="text-sm text-gray-600">
+									Phòng {rental.roomInstance?.roomNumber} - {rental.roomInstance?.room?.building?.name}
 								</p>
-							)}
+								{rental.roomInstance?.room?.building?.address && (
+									<p className="text-xs text-gray-500 mt-1">
+										{rental.roomInstance.room.building.address}
+									</p>
+								)}
+							</div>
 						</div>
 						{getStatusBadge(rental.status)}
 					</div>
 
-					<div className="grid grid-cols-2 gap-3 mt-4">
-						<div className="bg-primary bg-opacity-5 rounded-lg p-3">
-							<p className="text-xs text-gray-600 mb-1">Tiền thuê/tháng</p>
-							<p className="text-lg font-bold text-primary">
-								{Number(rental.monthlyRent).toLocaleString('vi-VN')} đ
-							</p>
+					<div className="mt-4 space-y-3">
+						<div className="bg-green-50 border border-green-200 rounded-lg p-4">
+							<div className="flex justify-between items-center">
+								<div>
+									<p className="text-xs text-gray-600 mb-1">Tiền thuê hàng tháng</p>
+									<p className="text-2xl font-bold text-green-600">
+										{Number(rental.monthlyRent).toLocaleString('vi-VN')}đ
+									</p>
+								</div>
+								<div className="bg-green-100 rounded-full p-3">
+									<Icon icon="zi-home" size={24} className="text-green-600" />
+								</div>
+							</div>
 						</div>
 						{rental.depositPaid && Number(rental.depositPaid) > 0 && (
-							<div className="bg-blue-50 rounded-lg p-3">
-								<p className="text-xs text-gray-600 mb-1">Tiền cọc</p>
-								<p className="text-lg font-bold text-blue-600">
-									{Number(rental.depositPaid).toLocaleString('vi-VN')} đ
-								</p>
+							<div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+								<div className="flex justify-between items-center">
+									<div>
+										<p className="text-xs text-gray-600 mb-1">Tiền đặt cọc</p>
+										<p className="text-xl font-bold text-blue-600">
+											{Number(rental.depositPaid).toLocaleString('vi-VN')}đ
+										</p>
+									</div>
+									<div className="bg-blue-100 rounded-full p-3">
+										<Icon icon="zi-star" size={24} className="text-blue-600" />
+									</div>
+								</div>
 							</div>
 						)}
 					</div>
@@ -168,19 +190,19 @@ const RentalDetailPage: React.FC = () => {
 						<div className="flex items-center text-sm">
 							<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 							<span className="text-gray-600">
-								Bắt đầu: {new Date(rental.startDate).toLocaleDateString('vi-VN')}
+								Bắt đầu: {new Date(rental.contractStartDate).toLocaleDateString('vi-VN')}
 							</span>
 						</div>
-						{rental.endDate && (
+						{rental.contractEndDate && (
 							<div className="flex items-center text-sm">
 								<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 								<span className="text-gray-600">
-									Kết thúc: {new Date(rental.endDate).toLocaleDateString('vi-VN')}
+									Kết thúc: {new Date(rental.contractEndDate).toLocaleDateString('vi-VN')}
 								</span>
 							</div>
 						)}
 						<div className="flex items-center text-sm">
-							<Icon icon="zi-clock" size={16} className="text-gray-400 mr-2" />
+							<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
 							<span className="text-gray-600">
 								Ngày tạo: {new Date(rental.createdAt).toLocaleDateString('vi-VN')}
 							</span>
@@ -191,7 +213,19 @@ const RentalDetailPage: React.FC = () => {
 				{/* Room Details */}
 				{rental.roomInstance?.room && (
 					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-						<h3 className="font-semibold text-gray-900 mb-3">Chi tiết phòng</h3>
+						<div className="flex justify-between items-center mb-3">
+							<h3 className="font-semibold text-gray-900">Chi tiết phòng</h3>
+							{rental.roomInstance.room.slug && (
+								<Button
+									size="small"
+									variant="tertiary"
+									onClick={() => navigate(`/room/${rental.roomInstance?.room?.id}`)}
+								>
+									<Icon icon="zi-search" size={16} className="mr-1" />
+									Xem phòng
+								</Button>
+							)}
+						</div>
 						<div className="space-y-2">
 							{rental.roomInstance.room.roomType && (
 								<div className="flex justify-between text-sm">
@@ -213,7 +247,9 @@ const RentalDetailPage: React.FC = () => {
 								<div className="flex justify-between text-sm">
 									<span className="text-gray-600">Diện tích:</span>
 									<span className="font-medium text-gray-900">
-										{rental.roomInstance.room.areaSqm} m²
+										{typeof rental.roomInstance.room.areaSqm === 'object'
+											? rental.roomInstance.room.areaSqm.d?.[0] || 'N/A'
+											: rental.roomInstance.room.areaSqm} m²
 									</span>
 								</div>
 							)}
@@ -221,10 +257,10 @@ const RentalDetailPage: React.FC = () => {
 					</div>
 				)}
 
-				{/* Tenant Info (for landlord) */}
-				{user?.role === 'landlord' && rental.tenant && (
+				{/* Tenant Info */}
+				{rental.tenant && (
 					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-						<h3 className="font-semibold text-gray-900 mb-3">Thông tin người thuê</h3>
+						<h3 className="font-semibold text-gray-900 mb-3">Thông tin người thuê chính</h3>
 						<div className="space-y-2">
 							<div className="flex items-center">
 								<Icon icon="zi-user" size={16} className="text-gray-400 mr-2" />
@@ -233,13 +269,86 @@ const RentalDetailPage: React.FC = () => {
 								</span>
 							</div>
 							<div className="flex items-center">
-								<Icon icon="zi-email" size={16} className="text-gray-400 mr-2" />
+								<Icon icon="zi-chat" size={16} className="text-gray-400 mr-2" />
 								<span className="text-sm text-gray-600">{rental.tenant.email}</span>
 							</div>
 							{rental.tenant.phone && (
 								<div className="flex items-center">
 									<Icon icon="zi-call" size={16} className="text-gray-400 mr-2" />
 									<span className="text-sm text-gray-600">{rental.tenant.phone}</span>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{/* Owner Info */}
+				{rental.owner && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">Thông tin chủ nhà</h3>
+						<div className="space-y-2">
+							<div className="flex items-center">
+								<Icon icon="zi-user" size={16} className="text-gray-400 mr-2" />
+								<span className="text-sm text-gray-600">
+									{rental.owner.firstName} {rental.owner.lastName}
+								</span>
+							</div>
+							<div className="flex items-center">
+								<Icon icon="zi-chat" size={16} className="text-gray-400 mr-2" />
+								<span className="text-sm text-gray-600">{rental.owner.email}</span>
+							</div>
+							{rental.owner.phone && (
+								<div className="flex items-center">
+									<Icon icon="zi-call" size={16} className="text-gray-400 mr-2" />
+									<span className="text-sm text-gray-600">{rental.owner.phone}</span>
+								</div>
+							)}
+						</div>
+					</div>
+				)}
+
+				{/* Members Info */}
+				{rental.members && rental.members.length > 0 && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">
+							Thành viên khác ({rental.members.length})
+						</h3>
+						<div className="space-y-3">
+							{rental.members.map((member) => (
+								<div key={member.tenantId} className="border-b last:border-b-0 pb-3 last:pb-0">
+									<div className="flex items-center mb-1">
+										<Icon icon="zi-user" size={14} className="text-gray-400 mr-2" />
+										<span className="text-sm font-medium text-gray-900">
+											{member.firstName} {member.lastName}
+										</span>
+									</div>
+									<div className="flex items-center ml-6">
+										<Icon icon="zi-chat" size={14} className="text-gray-400 mr-2" />
+										<span className="text-xs text-gray-600">{member.email}</span>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				)}
+
+				{/* Invitation Info */}
+				{rental.invitation && (
+					<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+						<h3 className="font-semibold text-gray-900 mb-3">Thông tin lời mời</h3>
+						<div className="space-y-2">
+							<div className="flex items-center text-sm">
+								<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
+								<span className="text-gray-600">
+									Ngày dọn vào: {new Date(rental.invitation.moveInDate).toLocaleDateString('vi-VN')}
+								</span>
+							</div>
+							{rental.invitation.message && (
+								<div className="mt-2 p-3 bg-blue-50 rounded-lg">
+									<p className="text-sm text-gray-700">
+										<Icon icon="zi-chat" size={14} className="inline mr-1" />
+										{rental.invitation.message}
+									</p>
 								</div>
 							)}
 						</div>
@@ -291,7 +400,7 @@ const RentalDetailPage: React.FC = () => {
 						variant="secondary"
 						onClick={() => navigate(`/invoices?rentalId=${rental.id}`)}
 					>
-						<Icon icon="zi-receipt" className="mr-2" />
+						<Icon icon="zi-note" className="mr-2" />
 						Xem hóa đơn
 					</Button>
 				</div>

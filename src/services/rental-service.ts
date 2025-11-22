@@ -5,8 +5,8 @@ export interface Rental {
 	id: string;
 	roomInstanceId: string;
 	tenantId: string;
-	startDate: string;
-	endDate?: string;
+	contractStartDate: string;
+	contractEndDate?: string;
 	monthlyRent: string;
 	depositPaid: string;
 	status: 'active' | 'pending' | 'terminated' | 'expired';
@@ -18,13 +18,15 @@ export interface Rental {
 		roomNumber: string;
 		room?: {
 			id: string;
+			slug?: string;
 			name: string;
 			roomType: string;
-			areaSqm: string;
+			areaSqm: string | { s: number; e: number; d: number[] };
+			overallRating?: { s: number; e: number; d: number[] };
 			building?: {
 				id: string;
 				name: string;
-				address: string;
+				address?: string;
 			};
 		};
 	};
@@ -36,6 +38,25 @@ export interface Rental {
 		phone?: string;
 		avatarUrl?: string;
 	};
+	owner?: {
+		id: string;
+		firstName: string;
+		lastName: string;
+		email: string;
+		phone?: string;
+	};
+	invitation?: {
+		id: string;
+		moveInDate: string;
+		message: string;
+	};
+	members?: Array<{
+		tenantId: string;
+		firstName: string;
+		lastName: string;
+		email: string;
+		rentalId: string;
+	}>;
 }
 
 export interface CreateRentalRequest {
@@ -133,9 +154,9 @@ export const getTenantRentals = async (params?: {
 };
 
 // Get rental details by ID
-export const getRentalById = async (id: string): Promise<{ data: Rental }> => {
+export const getRentalById = async (id: string): Promise<Rental> => {
 	try {
-		const response = await apiClient.get<{ data: Rental }>(`/api/rentals/${id}`);
+		const response = await apiClient.get(`/api/rentals/${id}`);
 		return response.data;
 	} catch (error) {
 		console.error('Error fetching rental details:', error);
