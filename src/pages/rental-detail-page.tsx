@@ -5,6 +5,7 @@ import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import { getRentalById, terminateRental, renewRental, Rental } from '@/services/rental-service';
 import { useAuth } from '@/components/providers/auth-provider';
+import { ROOM_TYPE_LABELS } from '@/interfaces/basic';
 
 const RentalDetailPage: React.FC = () => {
 	const { id } = useParams();
@@ -231,7 +232,7 @@ const RentalDetailPage: React.FC = () => {
 								<div className="flex justify-between text-sm">
 									<span className="text-gray-600">Loại phòng:</span>
 									<span className="font-medium text-gray-900">
-										{rental.roomInstance.room.roomType}
+										{ROOM_TYPE_LABELS[rental.roomInstance.room.roomType]	}
 									</span>
 								</div>
 							)}

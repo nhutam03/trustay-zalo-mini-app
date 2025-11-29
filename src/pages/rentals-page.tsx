@@ -4,7 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import BottomNav from '@/components/navigate-bottom';
-import { useLandlordRentals, useTenantRentals } from '@/hooks/useRentalService';
+import {
+	useLandlordRentals,
+	useTenantRentals,
+	useTerminateRental,
+	useRenewRental,
+	useDeleteRental,
+} from '@/hooks/useRentalService';
 import { Rental } from '@/services/rental-service';
 import { useAuth } from '@/components/providers/auth-provider';
 
@@ -22,6 +28,10 @@ const RentalsPage: React.FC = () => {
 
 	const rentals = query.data?.data || [];
 	const loading = query.isLoading;
+
+	const terminateMutation = useTerminateRental();
+	const renewMutation = useRenewRental();
+	const deleteMutation = useDeleteRental();
 
 	useEffect(() => {
 		setHeader({
@@ -47,8 +57,56 @@ const RentalsPage: React.FC = () => {
 		);
 	};
 
-	const handleRentalClick = (rentalId: string) => {
+	const handleRentalClick = (rentalId: string, e?: React.MouseEvent) => {
+		if (e) e.stopPropagation();
 		navigate(`/rentals/${rentalId}`);
+	};
+
+	const handleTerminateRental = async (rentalId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		const confirmed = window.confirm('Bạn có chắc chắn muốn chấm dứt hợp đồng cho thuê này?');
+
+		if (confirmed) {
+			try {
+				await terminateMutation.mutateAsync({
+					id: rentalId,
+					data: { terminationDate: new Date().toISOString(), reason: 'Chấm dứt bởi chủ nhà' },
+				});
+				alert('Đã chấm dứt hợp đồng thành công');
+			} catch (error) {
+				console.error('Error terminating rental:', error);
+				alert('Có lỗi khi chấm dứt hợp đồng');
+			}
+		}
+	};
+
+	const handleRenewRental = async (rentalId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		try {
+			await renewMutation.mutateAsync({
+				id: rentalId,
+				data: { newEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() },
+			});
+			alert('Đã gia hạn hợp đồng thành công');
+		} catch (error) {
+			console.error('Error renewing rental:', error);
+			alert('Có lỗi khi gia hạn hợp đồng');
+		}
+	};
+
+	const handleDeleteRental = async (rentalId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		const confirmed = window.confirm('Bạn có chắc chắn muốn xóa hợp đồng cho thuê này?');
+
+		if (confirmed) {
+			try {
+				await deleteMutation.mutateAsync(rentalId);
+				alert('Đã xóa hợp đồng thành công');
+			} catch (error) {
+				console.error('Error deleting rental:', error);
+				alert('Có lỗi khi xóa hợp đồng');
+			}
+		}
 	};
 
 	const renderRentalCard = (rental: Rental) => (
@@ -98,15 +156,43 @@ const RentalsPage: React.FC = () => {
 			</div>
 
 			{user?.role === 'landlord' && rental.tenant && (
-				<div className="flex items-center justify-between pt-2 border-t border-gray-100">
-					<div className="flex items-center text-sm text-gray-600">
-						<Icon icon="zi-user" size={16} className="mr-1" />
-						<span>
-							Người thuê: {rental.tenant.firstName} {rental.tenant.lastName}
-						</span>
+				<>
+					<div className="flex items-center justify-between pt-2 border-t border-gray-100">
+						<div className="flex items-center text-sm text-gray-600">
+							<Icon icon="zi-user" size={16} className="mr-1" />
+							<span>
+								Người thuê: {rental.tenant.firstName} {rental.tenant.lastName}
+							</span>
+						</div>
+						<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
 					</div>
-					<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
-				</div>
+					{rental.status === 'active' && (
+						<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+							<button
+								onClick={(e) => handleRenewRental(rental.id, e)}
+								className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg active:bg-blue-600"
+							>
+								Gia hạn
+							</button>
+							<button
+								onClick={(e) => handleTerminateRental(rental.id, e)}
+								className="flex-1 px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-lg active:bg-red-600"
+							>
+								Chấm dứt
+							</button>
+						</div>
+					)}
+					{(rental.status === 'terminated' || rental.status === 'expired') && (
+						<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+							<button
+								onClick={(e) => handleDeleteRental(rental.id, e)}
+								className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg active:bg-gray-600"
+							>
+								Xóa
+							</button>
+						</div>
+					)}
+				</>
 			)}
 
 			{user?.role === 'tenant' && (

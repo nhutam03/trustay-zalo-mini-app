@@ -6,6 +6,11 @@ import { changeStatusBarColor } from '@/utils/basic';
 import BottomNav from '@/components/navigate-bottom';
 import { getMyContracts } from '@/services/contract-service';
 import { Contract } from '@/interfaces/contract-interfaces';
+import {
+	useDeleteContract,
+	useGenerateContractPDF,
+	useRequestSigningOTP,
+} from '@/hooks/useContractService';
 
 const ContractsPage: React.FC = () => {
 	const setHeader = useSetHeader();
@@ -13,6 +18,10 @@ const ContractsPage: React.FC = () => {
 	const [contracts, setContracts] = useState<Contract[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [filter, setFilter] = useState<string>('all');
+
+	const deleteContractMutation = useDeleteContract();
+	const generatePDFMutation = useGenerateContractPDF();
+	const requestOTPMutation = useRequestSigningOTP();
 
 	useEffect(() => {
 		setHeader({
@@ -57,8 +66,55 @@ const ContractsPage: React.FC = () => {
 		);
 	};
 
-	const handleContractClick = (contractId: string) => {
+	const handleContractClick = (contractId: string, e?: React.MouseEvent) => {
+		if (e) e.stopPropagation();
 		navigate(`/contracts/${contractId}`);
+	};
+
+	const handleRequestSign = async (contractId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		try {
+			await requestOTPMutation.mutateAsync(contractId);
+			alert('Đã gửi yêu cầu OTP để ký hợp đồng. Vui lòng kiểm tra email hoặc SMS.');
+			navigate(`/contracts/${contractId}`);
+		} catch (error) {
+			console.error('Error requesting OTP:', error);
+			alert('Có lỗi khi gửi yêu cầu OTP');
+		}
+	};
+
+	const handleDownloadPDF = async (contractId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		try {
+			const result = await generatePDFMutation.mutateAsync({
+				contractId,
+				options: { includeSignatures: true },
+			});
+			// Open PDF in new tab or download
+			if (result.data?.pdfUrl) {
+				window.open(result.data.pdfUrl, '_blank');
+			}
+			alert('PDF đã được tạo thành công');
+		} catch (error) {
+			console.error('Error generating PDF:', error);
+			alert('Có lỗi khi tạo PDF');
+		}
+	};
+
+	const handleDeleteContract = async (contractId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		const confirmed = window.confirm('Bạn có chắc chắn muốn xóa hợp đồng này?');
+
+		if (confirmed) {
+			try {
+				await deleteContractMutation.mutateAsync(contractId);
+				alert('Đã xóa hợp đồng thành công');
+				loadContracts();
+			} catch (error) {
+				console.error('Error deleting contract:', error);
+				alert('Có lỗi khi xóa hợp đồng');
+			}
+		}
 	};
 
 	const renderContractCard = (contract: Contract) => {
@@ -124,6 +180,40 @@ const ContractsPage: React.FC = () => {
 					</div>
 					<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
 				</div>
+
+				{/* Action buttons */}
+				{(contract.status === 'pending_signatures' || contract.status === 'partially_signed') && (
+					<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+						<button
+							onClick={(e) => handleRequestSign(contract.id, e)}
+							className="flex-1 px-3 py-2 bg-green-500 text-white text-sm font-medium rounded-lg active:bg-green-600"
+						>
+							Ký hợp đồng
+						</button>
+					</div>
+				)}
+
+				{contract.status === 'active' && (
+					<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+						<button
+							onClick={(e) => handleDownloadPDF(contract.id, e)}
+							className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg active:bg-blue-600"
+						>
+							Tải PDF
+						</button>
+					</div>
+				)}
+
+				{contract.status === 'draft' && (
+					<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+						<button
+							onClick={(e) => handleDeleteContract(contract.id, e)}
+							className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg active:bg-gray-600"
+						>
+							Xóa
+						</button>
+					</div>
+				)}
 			</button>
 		);
 	};

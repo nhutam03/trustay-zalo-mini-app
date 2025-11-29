@@ -5,7 +5,12 @@ import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import BottomNav from '@/components/navigate-bottom';
 import { useAuth } from '@/components/providers/auth-provider';
-import { useTenantBills, useLandlordBills } from '@/hooks/useBillService';
+import {
+	useTenantBills,
+	useLandlordBills,
+	useMarkBillAsPaid,
+	useDeleteBill,
+} from '@/hooks/useBillService';
 import { Bill, BillStatus } from '@/interfaces/bill-interfaces';
 
 const InvoicesPage: React.FC = () => {
@@ -22,6 +27,9 @@ const InvoicesPage: React.FC = () => {
 
 	const bills = billsData?.data || [];
 	const loading = isLoading;
+
+	const markAsPaidMutation = useMarkBillAsPaid();
+	const deleteBillMutation = useDeleteBill();
 
 	useEffect(() => {
 		setHeader({
@@ -47,8 +55,39 @@ const InvoicesPage: React.FC = () => {
 		);
 	};
 
-	const handleInvoiceClick = (billId: string) => {
+	const handleInvoiceClick = (billId: string, e?: React.MouseEvent) => {
+		if (e) e.stopPropagation();
 		navigate(`/invoices/${billId}`);
+	};
+
+	const handleMarkAsPaid = async (billId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		const confirmed = window.confirm('Bạn có chắc chắn muốn đánh dấu hóa đơn này đã thanh toán?');
+
+		if (confirmed) {
+			try {
+				await markAsPaidMutation.mutateAsync(billId);
+				alert('Đã đánh dấu hóa đơn là đã thanh toán');
+			} catch (error) {
+				console.error('Error marking bill as paid:', error);
+				alert('Có lỗi khi đánh dấu hóa đơn');
+			}
+		}
+	};
+
+	const handleDeleteBill = async (billId: string, e: React.MouseEvent) => {
+		e.stopPropagation();
+		const confirmed = window.confirm('Bạn có chắc chắn muốn xóa hóa đơn này?');
+
+		if (confirmed) {
+			try {
+				await deleteBillMutation.mutateAsync(billId);
+				alert('Đã xóa hóa đơn thành công');
+			} catch (error) {
+				console.error('Error deleting bill:', error);
+				alert('Có lỗi khi xóa hóa đơn');
+			}
+		}
 	};
 
 	const renderBillCard = (bill: Bill) => (
@@ -113,6 +152,38 @@ const InvoicesPage: React.FC = () => {
 			<div className="flex items-center justify-end pt-2">
 				<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
 			</div>
+
+			{/* Action buttons for landlord */}
+			{user?.role === 'landlord' && (
+				<>
+					{(bill.status === 'pending' || bill.status === 'overdue') && (
+						<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+							<button
+								onClick={(e) => handleMarkAsPaid(bill.id, e)}
+								className="flex-1 px-3 py-2 bg-green-500 text-white text-sm font-medium rounded-lg active:bg-green-600"
+							>
+								Đánh dấu đã thanh toán
+							</button>
+							<button
+								onClick={(e) => handleDeleteBill(bill.id, e)}
+								className="px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-lg active:bg-red-600"
+							>
+								Xóa
+							</button>
+						</div>
+					)}
+					{bill.status === 'cancelled' && (
+						<div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+							<button
+								onClick={(e) => handleDeleteBill(bill.id, e)}
+								className="flex-1 px-3 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg active:bg-gray-600"
+							>
+								Xóa
+							</button>
+						</div>
+					)}
+				</>
+			)}
 		</button>
 	);
 
