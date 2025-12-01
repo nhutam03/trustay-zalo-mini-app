@@ -18,14 +18,14 @@ const CATEGORY_LABELS: Record<RoomIssueCategory, string> = {
 	other: 'Khác',
 };
 
-const CATEGORY_ICONS: Record<RoomIssueCategory, string> = {
+const CATEGORY_ICONS = {
 	facility: 'zi-home',
-	utility: 'zi-flash',
-	neighbor: 'zi-user-group',
-	noise: 'zi-volume-mute',
-	security: 'zi-shield-check',
+	utility: 'zi-setting',
+	neighbor: 'zi-user',
+	noise: 'zi-notif',
+	security: 'zi-lock',
 	other: 'zi-more-grid',
-};
+} as const;
 
 const RoomIssueDetailPage: React.FC = () => {
 	const { id } = useParams();
@@ -146,7 +146,7 @@ const RoomIssueDetailPage: React.FC = () => {
 								onClick={() => navigate(`/room/${issue.roomInstance.room.slug}`)}
 								className="mt-2"
 							>
-								<Icon icon="zi-eye" size={14} className="mr-1" />
+								<Icon icon="zi-star" size={14} className="mr-1" />
 								Xem chi tiết phòng
 							</Button>
 						)}
@@ -212,7 +212,7 @@ const RoomIssueDetailPage: React.FC = () => {
 				{/* Timeline */}
 				<div className="bg-white rounded-lg shadow-sm p-4 mb-4">
 					<h3 className="font-semibold text-gray-900 mb-3 flex items-center">
-						<Icon icon="zi-clock" size={18} className="mr-2 text-primary" />
+						<Icon icon="zi-calendar" size={18} className="mr-2 text-primary" />
 						Thời gian
 					</h3>
 					<div className="space-y-3">

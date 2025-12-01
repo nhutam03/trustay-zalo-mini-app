@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RoommateSeekingPost } from "@/interfaces/roommate-interface";
-import { getRoommateSeekingPostById } from "@/services/roommate-service";
+import { getRoommateSeekingPostById } from "@/services/roommate-seeking-posts-service";
 import { getRoommateSeekingListings } from "@/services/listing";
 
 // Query keys

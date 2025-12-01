@@ -45,6 +45,10 @@ import LinkAccountPage from "@/pages/link-account-page";
 import RoomIssuesPage from "@/pages/room-issues-page";
 import RoomIssueDetailPage from "@/pages/room-issue-detail-page";
 import ReportRoomIssuePage from "@/pages/report-room-issue-page";
+import RoomIssuesManagementPage from "@/pages/room-issues-management-page";
+import PaymentsPage from "@/pages/payments-page";
+import PaymentDetailPage from "@/pages/payment-detail-page";
+import TenantPreferencesPage from "@/pages/tenant-preferences-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
@@ -219,6 +223,14 @@ const Layout = () => {
                     }
                   ></Route>
                   <Route
+                    path="/room-issues-management"
+                    element={
+                      <ProtectedRoute>
+                        <RoomIssuesManagementPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
                     path="/room-issues/:id"
                     element={
                       <ProtectedRoute>
@@ -231,6 +243,32 @@ const Layout = () => {
                     element={
                       <ProtectedRoute>
                         <ReportRoomIssuePage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  {/* Payment Routes - Protected */}
+                  <Route
+                    path="/payments"
+                    element={
+                      <ProtectedRoute>
+                        <PaymentsPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/payment-detail/:id"
+                    element={
+                      <ProtectedRoute>
+                        <PaymentDetailPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  {/* Tenant Preferences - Protected */}
+                  <Route
+                    path="/tenant-preferences"
+                    element={
+                      <ProtectedRoute>
+                        <TenantPreferencesPage />
                       </ProtectedRoute>
                     }
                   ></Route>

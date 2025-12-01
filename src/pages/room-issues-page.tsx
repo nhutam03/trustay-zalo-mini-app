@@ -17,14 +17,14 @@ const CATEGORY_LABELS: Record<RoomIssueCategory, string> = {
 	other: 'Khác',
 };
 
-const CATEGORY_ICONS: Record<RoomIssueCategory, string> = {
+const CATEGORY_ICONS = {
 	facility: 'zi-home',
-	utility: 'zi-flash',
-	neighbor: 'zi-user-group',
-	noise: 'zi-volume-mute',
-	security: 'zi-shield-check',
+	utility: 'zi-setting',
+	neighbor: 'zi-user',
+	noise: 'zi-notif',
+	security: 'zi-lock',
 	other: 'zi-more-grid',
-};
+} as const;
 
 const RoomIssuesPage: React.FC = () => {
 	const navigate = useNavigate();
@@ -140,7 +140,7 @@ const RoomIssuesPage: React.FC = () => {
 
 						<div className="flex items-center justify-between mt-2">
 							<div className="flex items-center text-xs text-gray-500">
-								<Icon icon="zi-clock" size={12} className="mr-1" />
+								<Icon icon="zi-calendar" size={12} className="mr-1" />
 								<span>{formatDate(issue.createdAt)}</span>
 							</div>
 							
@@ -206,7 +206,7 @@ const RoomIssuesPage: React.FC = () => {
 				) : (
 					<div className="text-center py-8">
 						<div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-							<Icon icon="zi-shield-check" size={32} className="text-gray-400" />
+							<Icon icon="zi-user-check" size={32} className="text-gray-400" />
 						</div>
 						<p className="text-gray-500 mb-2">
 							{statusFilter === 'all' 

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import { useBill, useMarkBillAsPaid, useCreatePayOSLink } from '@/hooks/useBillService';
+import { useCreatePayment } from '@/hooks/usePaymentService';
 import { useAuth } from '@/components/providers/auth-provider';
 import { openWebview } from 'zmp-sdk/apis';
 
@@ -18,6 +19,7 @@ const InvoiceDetailPage: React.FC = () => {
 	const { data: billData, isLoading: loading } = useBill(id || '', !!id);
 	const markAsPaidMutation = useMarkBillAsPaid();
 	const createPayOSLinkMutation = useCreatePayOSLink();
+	const createPaymentMutation = useCreatePayment();
 
 	const bill = billData?.data;
 
@@ -42,10 +44,22 @@ const InvoiceDetailPage: React.FC = () => {
 	};
 
 	const handlePayWithPayOS = async () => {
-		if (!id) return;
+		if (!id || !bill || !user) return;
 		
 		setIsCreatingPayment(true);
 		try {
+			// First create a payment record
+			const payment = await createPaymentMutation.mutateAsync({
+				billId: id,
+				amount: Number(bill.totalAmount),
+				paymentType: 'other',
+				paymentMethod: 'other',
+				payerId: user.id,
+				receiverId: bill.rental?.landlord?.id || '',
+				notes: `Thanh toán hóa đơn tháng ${bill.billingMonth}/${bill.billingYear}`,
+			});
+
+			// Then create PayOS link
 			const response = await createPayOSLinkMutation.mutateAsync({
 				billId: id,
 			});
@@ -139,12 +153,12 @@ const InvoiceDetailPage: React.FC = () => {
 								{new Date(bill.periodEnd).toLocaleDateString('vi-VN')}
 							</span>
 						</div>
-						<div className="flex items-center text-sm">
-							<Icon icon="zi-clock" size={16} className="text-gray-400 mr-2" />
-							<span className="text-gray-600">
-								Hạn thanh toán: {new Date(bill.dueDate).toLocaleDateString('vi-VN')}
-							</span>
-						</div>
+					<div className="flex items-center text-sm">
+						<Icon icon="zi-calendar" size={16} className="text-gray-400 mr-2" />
+						<span className="text-gray-600">
+							Hạn thanh toán: {new Date(bill.dueDate).toLocaleDateString('vi-VN')}
+						</span>
+					</div>
 						{bill.paidDate && (
 							<div className="flex items-center text-sm">
 								<Icon icon="zi-check-circle" size={16} className="text-green-500 mr-2" />
@@ -155,7 +169,7 @@ const InvoiceDetailPage: React.FC = () => {
 						)}
 						{bill.occupancyCount && (
 							<div className="flex items-center text-sm">
-								<Icon icon="zi-user-group" size={16} className="text-gray-400 mr-2" />
+								<Icon icon="zi-user" size={16} className="text-gray-400 mr-2" />
 								<span className="text-gray-600">Số người ở: {bill.occupancyCount}</span>
 							</div>
 						)}

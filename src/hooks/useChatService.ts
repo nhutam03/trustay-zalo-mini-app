@@ -47,6 +47,7 @@ export const useInfiniteMessages = (conversationId: string | undefined, limit: n
 		queryFn: ({ pageParam }) =>
 			getMessages(conversationId!, { cursor: pageParam, limit }),
 		enabled: !!conversationId,
+		initialPageParam: undefined,
 		getNextPageParam: (lastPage) => {
 			// Assuming the API returns a nextCursor in the response
 			return (lastPage as any).nextCursor;
@@ -78,7 +79,7 @@ export const useSendMessage = () => {
 		onSuccess: (response) => {
 			// Invalidate messages for this conversation
 			queryClient.invalidateQueries({
-				queryKey: chatKeys.messages(response.data.conversationId),
+				queryKey: chatKeys.messages(response.conversationId),
 			});
 			// Invalidate conversations list to update last message
 			queryClient.invalidateQueries({ queryKey: chatKeys.conversations() });

@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
 	searchRoomInstances,
-	createBillForRoom,
-	type RoomInstanceSearchParams,
-	type CreateBillForRoomDto,
+	type RoomInstanceSearchParams
 } from '@/services/room-instance-service';
+import { CreateBillForRoomDto } from '@/interfaces/room-instance-interfaces';
+import { createBillForRoom } from '@/services/bill-service';
 
 // Query keys
 export const roomInstanceKeys = {

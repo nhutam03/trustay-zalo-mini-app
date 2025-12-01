@@ -433,14 +433,14 @@ const RoommateDetailPage: React.FC = () => {
           <Button
             variant="primary"
             className="flex-[3]"
-            disabled={!post.canApply}
+            disabled={post.status !== "active"}
             onClick={() => {
               // TODO: Implement contact functionality
               console.log("Contact author");
             }}
           >
             <Icon icon="zi-chat" size={18} className="mr-2" />
-            {post.canApply ? "Gửi yêu cầu ở ghép" : "Không thể gửi yêu cầu"}
+            {post.status === "active" ? "Gửi yêu cầu ở ghép" : "Không thể gửi yêu cầu"}
           </Button>
         </div>
       </div>

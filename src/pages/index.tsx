@@ -57,16 +57,16 @@ function HomePage() {
       route: "/payments",
     },
     {
+      id: "room-issues",
+      title: "Sự Cố",
+      icon: "zi-warning",
+      route: "/room-issues-management",
+    },
+    {
       id: "profile",
       title: "Cá Nhân",
       icon: "zi-user",
       route: "/profile",
-    },
-    {
-      id: "support",
-      title: "Hỗ Trợ",
-      icon: "zi-help-circle",
-      route: "/support",
     },
   ];
 

@@ -35,6 +35,14 @@ const SettingsPage: React.FC = () => {
 					rightIcon: 'zi-chevron-right',
 				},
 				{
+					id: 'preferences',
+					icon: 'zi-star',
+					label: 'Sở thích tìm phòng',
+					route: '/tenant-preferences',
+					description: 'Cài đặt tiêu chí tìm kiếm',
+					rightIcon: 'zi-chevron-right',
+				},
+				{
 					id: 'security',
 					icon: 'zi-shield-solid',
 					label: 'Bảo mật',

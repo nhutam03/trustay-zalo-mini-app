@@ -2,15 +2,12 @@ import { apiClient, extractErrorMessage } from '@/lib/api-client';
 import type {
 	RoomInstanceSearchParams,
 	RoomInstanceSearchResponse,
-	CreateBillForRoomDto,
 } from '@/interfaces/room-instance-interfaces';
-import type { Bill } from '@/interfaces/bill-interfaces';
 
 // Export types for use in hooks
 export type {
 	RoomInstanceSearchParams,
 	RoomInstanceSearchResponse,
-	CreateBillForRoomDto,
 };
 
 /**
@@ -48,25 +45,4 @@ export const searchRoomInstances = async (
 	}
 };
 
-/**
- * Create bill for a specific room instance
- * POST /bills/create-for-room
- * 
- * Flow:
- * 1. Call searchRoomInstances to identify the correct roomInstanceId
- * 2. Submit the payload
- * 3. Service auto-calculates costs, creates bill items, and notifies tenant
- */
-export const createBillForRoom = async (
-	data: CreateBillForRoomDto,
-): Promise<{ data: Bill }> => {
-	try {
-		const response = await apiClient.post<{ data: Bill }>(
-			'/api/bills/create-for-room',
-			data,
-		);
-		return response.data;
-	} catch (error) {
-		throw new Error(extractErrorMessage(error, 'Không thể tạo hóa đơn cho phòng'));
-	}
-};
+// Note: createBillForRoom has been moved to bill-service.ts to avoid duplication

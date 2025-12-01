@@ -26,10 +26,11 @@ export const roomIssueKeys = {
  * Default behavior: returns only 'new' and 'in_progress' issues
  * To see resolved issues, pass status: 'resolved' in params
  */
-export const useTenantRoomIssues = (params?: RoomIssueQueryDto) => {
+export const useTenantRoomIssues = (params?: RoomIssueQueryDto, enabled = true) => {
 	return useQuery({
 		queryKey: roomIssueKeys.tenant(params || {}),
 		queryFn: () => getTenantRoomIssues(params),
+		enabled,
 		staleTime: 1 * 60 * 1000, // 1 minute
 	});
 };
@@ -41,10 +42,11 @@ export const useTenantRoomIssues = (params?: RoomIssueQueryDto) => {
  * Default behavior: returns only 'new' and 'in_progress' issues, sorted by oldest first
  * Can filter by reporterId, roomInstanceId, category, or status
  */
-export const useLandlordRoomIssues = (params?: LandlordRoomIssueQueryDto) => {
+export const useLandlordRoomIssues = (params?: LandlordRoomIssueQueryDto, enabled = true) => {
 	return useQuery({
 		queryKey: roomIssueKeys.landlord(params || {}),
 		queryFn: () => getLandlordRoomIssues(params),
+		enabled,
 		staleTime: 1 * 60 * 1000, // 1 minute
 	});
 };

@@ -60,7 +60,7 @@ const LinkAccountPage: React.FC = () => {
         <div className="bg-white rounded-xl p-6 shadow-sm mb-4">
           <div className="text-center mb-4">
             <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Icon icon="zi-user-plus" size={40} className="text-blue-600" />
+              <Icon icon="zi-add-user-solid" size={40} className="text-blue-600" />
             </div>
             <h3 className="font-bold text-lg text-gray-900 mb-2">
               Liên kết tài khoản Zalo

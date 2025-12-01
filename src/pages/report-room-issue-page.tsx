@@ -8,12 +8,12 @@ import type { RoomIssueCategory } from '@/interfaces/room-issue-interfaces';
 import { useAuth } from '@/components/providers/auth-provider';
 
 const ISSUE_CATEGORIES = [
-	{ value: 'facility', label: 'Cơ sở vật chất', icon: 'zi-home', description: 'Tường, cửa, sàn...' },
-	{ value: 'utility', label: 'Tiện ích', icon: 'zi-flash', description: 'Điện, nước, wifi...' },
-	{ value: 'neighbor', label: 'Hàng xóm', icon: 'zi-user-group', description: 'Vấn đề với hàng xóm' },
-	{ value: 'noise', label: 'Tiếng ồn', icon: 'zi-volume-mute', description: 'Ồn ào, ảnh hưởng nghỉ ngơi' },
-	{ value: 'security', label: 'An ninh', icon: 'zi-shield-check', description: 'Vấn đề an toàn, bảo mật' },
-	{ value: 'other', label: 'Khác', icon: 'zi-more-grid', description: 'Các vấn đề khác' },
+	{ value: 'facility', label: 'Cơ sở vật chất', icon: 'zi-home' as const, description: 'Tường, cửa, sàn...' },
+	{ value: 'utility', label: 'Tiện ích', icon: 'zi-setting' as const, description: 'Điện, nước, wifi...' },
+	{ value: 'neighbor', label: 'Hàng xóm', icon: 'zi-user' as const, description: 'Vấn đề với hàng xóm' },
+	{ value: 'noise', label: 'Tiếng ồn', icon: 'zi-notif' as const, description: 'Ồn ào, ảnh hưởng nghỉ ngơi' },
+	{ value: 'security', label: 'An ninh', icon: 'zi-lock' as const, description: 'Vấn đề an toàn, bảo mật' },
+	{ value: 'other', label: 'Khác', icon: 'zi-more-grid' as const, description: 'Các vấn đề khác' },
 ];
 
 const ReportRoomIssuePage: React.FC = () => {
@@ -153,7 +153,7 @@ const ReportRoomIssuePage: React.FC = () => {
 					
 					<div className="flex gap-2 mb-3">
 						<Input
-							type="url"
+							type="text"
 							placeholder="https://example.com/image.jpg"
 							value={imageUrlInput}
 							onChange={(e) => setImageUrlInput(e.target.value)}
@@ -213,15 +213,13 @@ const ReportRoomIssuePage: React.FC = () => {
 								<div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
 								Đang gửi...
 							</>
-						) : (
-							<>
-								<Icon icon="zi-send" className="mr-2" />
-								Gửi báo cáo
-							</>
-						)}
-					</Button>
-					
-					<Button
+					) : (
+						<>
+							<Icon icon="zi-check-circle" className="mr-2" />
+							Gửi báo cáo
+						</>
+					)}
+				</Button>					<Button
 						fullWidth
 						variant="secondary"
 						onClick={() => navigate(`/rentals/${rentalId}`)}
