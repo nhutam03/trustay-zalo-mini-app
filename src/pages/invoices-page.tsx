@@ -229,6 +229,22 @@ const InvoicesPage: React.FC = () => {
 				</div>
 			</Box>
 
+			{/* Landlord Actions */}
+			{user?.role === 'landlord' && (
+				<Box className="bg-white mb-2 px-4 py-3">
+					<button
+						onClick={() => navigate('/generate-monthly-bills')}
+						className="w-full flex items-center justify-between p-3 bg-primary bg-opacity-10 rounded-lg active:bg-opacity-20 transition-colors"
+					>
+						<div className="flex items-center">
+							<Icon icon="zi-plus-circle" size={20} className="text-primary mr-2" />
+							<span className="text-sm font-medium text-primary">Tạo hóa đơn hàng tháng</span>
+						</div>
+						<Icon icon="zi-chevron-right" size={20} className="text-primary" />
+					</button>
+				</Box>
+			)}
+
 			{/* Filter tabs */}
 			<Box className="bg-white mb-2 px-4 py-3">
 				<div className="flex gap-2 overflow-x-auto">

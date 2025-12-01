@@ -1,20 +1,23 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Page, Box, Icon, Button } from 'zmp-ui';
 import { useParams, useNavigate } from 'react-router-dom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
-import { useBill, useMarkBillAsPaid } from '@/hooks/useBillService';
+import { useBill, useMarkBillAsPaid, useCreatePayOSLink } from '@/hooks/useBillService';
 import { useAuth } from '@/components/providers/auth-provider';
+import { openWebview } from 'zmp-sdk/apis';
 
 const InvoiceDetailPage: React.FC = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const setHeader = useSetHeader();
 	const { user } = useAuth();
+	const [isCreatingPayment, setIsCreatingPayment] = useState(false);
 
 	// Use hooks
 	const { data: billData, isLoading: loading } = useBill(id || '', !!id);
 	const markAsPaidMutation = useMarkBillAsPaid();
+	const createPayOSLinkMutation = useCreatePayOSLink();
 
 	const bill = billData?.data;
 
@@ -35,6 +38,35 @@ const InvoiceDetailPage: React.FC = () => {
 		} catch (error) {
 			console.error('Error marking bill as paid:', error);
 			alert('Không thể đánh dấu đã thanh toán');
+		}
+	};
+
+	const handlePayWithPayOS = async () => {
+		if (!id) return;
+		
+		setIsCreatingPayment(true);
+		try {
+			const response = await createPayOSLinkMutation.mutateAsync({
+				billId: id,
+			});
+
+			if (response.checkoutUrl) {
+				// Open PayOS checkout in webview
+				await openWebview({
+					url: response.checkoutUrl,
+					config: {
+						style: 'bottomSheet',
+						leftButton: 'back',
+					},
+				});
+			} else {
+				throw new Error('Không nhận được link thanh toán');
+			}
+		} catch (error) {
+			console.error('Error creating PayOS link:', error);
+			alert('Không thể tạo link thanh toán. Vui lòng thử lại sau.');
+		} finally {
+			setIsCreatingPayment(false);
 		}
 	};
 
@@ -270,12 +302,39 @@ const InvoiceDetailPage: React.FC = () => {
 					<div className="space-y-3 mb-6">
 						<Button
 							fullWidth
+							variant="secondary"
+							onClick={() => navigate(`/invoices/${id}/update-meter`)}
+						>
+							<Icon icon="zi-edit" className="mr-2" />
+							Cập nhật số đồng hồ
+						</Button>
+						<Button
+							fullWidth
 							variant="primary"
 							onClick={handleMarkAsPaid}
 							disabled={markAsPaidMutation.isPending}
 						>
 							{markAsPaidMutation.isPending ? 'Đang xử lý...' : 'Đánh dấu đã thanh toán'}
 						</Button>
+					</div>
+				)}
+
+				{/* Tenant Payment Action */}
+				{user?.role === 'tenant' && (bill.status === 'pending' || bill.status === 'overdue') && (
+					<div className="space-y-3 mb-6">
+						<Button
+							fullWidth
+							variant="primary"
+							onClick={handlePayWithPayOS}
+							disabled={isCreatingPayment || createPayOSLinkMutation.isPending}
+						>
+							{isCreatingPayment || createPayOSLinkMutation.isPending 
+								? 'Đang tạo link thanh toán...' 
+								: 'Thanh toán qua PayOS'}
+						</Button>
+						<p className="text-xs text-gray-500 text-center">
+							Hỗ trợ thanh toán qua QR Code, ATM, Visa, Mastercard
+						</p>
 					</div>
 				)}
 

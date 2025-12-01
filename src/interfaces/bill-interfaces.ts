@@ -175,3 +175,32 @@ export interface PaginatedBillResponse {
 		totalPages: number;
 	};
 }
+
+export interface PayOSLinkRequest {
+	returnUrl?: string;
+	cancelUrl?: string;
+}
+
+export interface PayOSLinkResponse {
+	checkoutUrl: string;
+	qrCode?: string;
+	orderCode: number;
+	amount: number;
+	currency: string;
+	description: string;
+	paymentLinkId: string;
+	expiredAt: number;
+}
+
+// ============= CREATE BILL FOR ROOM INSTANCE =============
+export interface CreateBillForRoomRequest {
+	roomInstanceId: string;
+	billingPeriod: string; // "2025-01" (YYYY-MM)
+	billingMonth: number; // 1-12
+	billingYear: number; // 2025
+	periodStart: string; // "2025-01-01"
+	periodEnd: string; // "2025-01-31"
+	occupancyCount: number; // số người ở
+	meterReadings: MeterReading[];
+	notes?: string;
+}

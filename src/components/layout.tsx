@@ -30,6 +30,8 @@ import RentalsPage from "@/pages/rentals-page";
 import RentalDetailPage from "@/pages/rental-detail-page";
 import InvoicesPage from "@/pages/invoices-page";
 import InvoiceDetailPage from "@/pages/invoice-detail-page";
+import UpdateBillMeterPage from "@/pages/update-bill-meter-page";
+import GenerateMonthlyBillsPage from "@/pages/generate-monthly-bills-page";
 import EditNamePage from "@/pages/profile/EditNamePage";
 import EditBioPage from "@/pages/profile/EditBioPage";
 import EditGenderPage from "@/pages/profile/EditGenderPage";
@@ -164,6 +166,22 @@ const Layout = () => {
                     element={
                       <ProtectedRoute>
                         <InvoiceDetailPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/invoices/:id/update-meter"
+                    element={
+                      <ProtectedRoute>
+                        <UpdateBillMeterPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/generate-monthly-bills"
+                    element={
+                      <ProtectedRoute>
+                        <GenerateMonthlyBillsPage />
                       </ProtectedRoute>
                     }
                   ></Route>

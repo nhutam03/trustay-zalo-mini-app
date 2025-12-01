@@ -3,10 +3,13 @@ import type {
 	Bill,
 	BillQueryParams,
 	CreateBillRequest,
+	CreateBillForRoomRequest,
 	GenerateMonthlyBillsRequest,
 	GenerateMonthlyBillsResponse,
 	LandlordBillQueryParams,
 	PaginatedBillResponse,
+	PayOSLinkRequest,
+	PayOSLinkResponse,
 	PreviewBillForBuildingRequest,
 	UpdateBillRequest,
 	UpdateBillWithMeterDataRequest,
@@ -76,6 +79,22 @@ export const createBillForRoom = async (
 		return normalizeEntityResponse<Bill>(response.data);
 	} catch (error) {
 		throw new Error(extractErrorMessage(error, 'Không thể tạo hóa đơn') );
+	}
+};
+
+// Create bill by room instance ID (Landlord only) - New enhanced API
+export const createBillByRoomInstance = async (
+	data: CreateBillForRoomRequest,
+	token?: string,
+): Promise<{ data: Bill }> => {
+	try {
+		const response = await apiClient.post<{ data: Bill }>(
+			'/api/bills/create-for-room',
+			data,
+		);
+		return normalizeEntityResponse<Bill>(response.data);
+	} catch (error) {
+		throw new Error(extractErrorMessage(error, 'Không thể tạo hóa đơn cho phòng'));
 	}
 };
 
@@ -260,5 +279,22 @@ export const getTenantBills = async (
 		return parseDecimalFields(response.data) as PaginatedBillResponse;
 	} catch (error) {
 		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách hóa đơn'));
+	}
+};
+
+// Create PayOS checkout link for bill payment
+export const createPayOSLinkForBill = async (
+	billId: string,
+	data?: PayOSLinkRequest,
+	token?: string,
+): Promise<PayOSLinkResponse> => {
+	try {
+		const response = await apiClient.post<PayOSLinkResponse>(
+			`/api/bills/${billId}/payos-link`,
+			data,
+		);
+		return response.data;
+	} catch (error) {
+		throw new Error(extractErrorMessage(error, 'Không thể tạo liên kết PayOS'));
 	}
 };

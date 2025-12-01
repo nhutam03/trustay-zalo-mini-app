@@ -5,20 +5,26 @@ import {
 	getTenantBills,
 	getLandlordBillsByMonth,
 	createBillForRoom,
+	createBillByRoomInstance,
 	updateBill,
 	deleteBill,
 	markBillAsPaid,
 	updateBillWithMeterData,
 	generateMonthlyBillsForBuilding,
 	previewBillsForBuilding,
+	createPayOSLinkForBill,
+} from '@/services/bill-service';
+import type {
 	BillQueryParams,
 	LandlordBillQueryParams,
 	CreateBillRequest,
+	CreateBillForRoomRequest,
 	UpdateBillRequest,
 	UpdateBillWithMeterDataRequest,
 	GenerateMonthlyBillsRequest,
 	PreviewBillForBuildingRequest,
-} from '@/services/bill-service';
+	PayOSLinkRequest,
+} from '@/interfaces/bill-interfaces';
 
 // Query keys
 export const billKeys = {
@@ -74,6 +80,18 @@ export const useCreateBill = () => {
 
 	return useMutation({
 		mutationFn: (data: CreateBillRequest) => createBillForRoom(data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: billKeys.lists() });
+		},
+	});
+};
+
+// Create bill by room instance mutation
+export const useCreateBillByRoomInstance = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (data: CreateBillForRoomRequest) => createBillByRoomInstance(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: billKeys.lists() });
 		},
@@ -150,5 +168,19 @@ export const useGenerateMonthlyBills = () => {
 export const usePreviewBills = () => {
 	return useMutation({
 		mutationFn: (data: PreviewBillForBuildingRequest) => previewBillsForBuilding(data),
+	});
+};
+
+// Create PayOS link for bill payment
+export const useCreatePayOSLink = () => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: ({ billId, data }: { billId: string; data?: PayOSLinkRequest }) =>
+			createPayOSLinkForBill(billId, data),
+		onSuccess: (_, variables) => {
+			// Optionally invalidate bill details to refresh status
+			queryClient.invalidateQueries({ queryKey: billKeys.detail(variables.billId) });
+		},
 	});
 };
