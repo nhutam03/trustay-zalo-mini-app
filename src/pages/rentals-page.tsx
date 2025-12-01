@@ -229,6 +229,29 @@ const RentalsPage: React.FC = () => {
 				</div>
 			</Box>
 
+			{/* Quick Access Button to Room Issues */}
+			<Box className="px-4 py-2 mb-2">
+				<button
+					onClick={() => navigate('/room-issues')}
+					className="w-full bg-white p-3 rounded-lg shadow-sm flex items-center justify-between active:bg-gray-50"
+				>
+					<div className="flex items-center gap-3">
+						<div className="p-2 bg-orange-50 rounded-lg">
+							<Icon icon="zi-warning" size={20} className="text-orange-600" />
+						</div>
+						<div className="text-left">
+							<p className="font-medium text-gray-900">
+								{user?.role === 'landlord' ? 'Sự cố cần xử lý' : 'Sự cố đã báo cáo'}
+							</p>
+							<p className="text-xs text-gray-500">
+								{user?.role === 'landlord' ? 'Xem các sự cố được báo cáo' : 'Xem các sự cố bạn đã báo cáo'}
+							</p>
+						</div>
+					</div>
+					<Icon icon="zi-chevron-right" size={20} className="text-gray-400" />
+				</button>
+			</Box>
+
 			<Box className="px-4 py-2">
 				{loading ? (
 					<div className="flex justify-center items-center py-8">

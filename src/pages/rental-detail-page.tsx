@@ -367,9 +367,19 @@ const RentalDetailPage: React.FC = () => {
 				{/* Actions */}
 				{rental.status === 'active' && (
 					<div className="space-y-3 mb-6">
+						{user?.role === 'tenant' && (
+							<Button
+								fullWidth
+								variant="primary"
+								onClick={() => navigate(`/report-room-issue/${rental.id}?roomInstanceId=${rental.roomInstance?.id}&roomName=${encodeURIComponent(rental.roomInstance?.room?.name || '')}&roomNumber=${rental.roomInstance?.roomNumber || ''}`)}
+							>
+								<Icon icon="zi-warning" className="mr-2" />
+								Báo cáo sự cố
+							</Button>
+						)}
 						<Button
 							fullWidth
-							variant="primary"
+							variant={user?.role === 'tenant' ? 'secondary' : 'primary'}
 							onClick={() => setShowRenewModal(true)}
 						>
 							<Icon icon="zi-calendar" className="mr-2" />

@@ -40,6 +40,9 @@ import SettingsPage from "@/pages/settings-page";
 import SavedRoomsPage from "@/pages/saved-rooms-page";
 import HelpCenterPage from "@/pages/help-center-page";
 import LinkAccountPage from "@/pages/link-account-page";
+import RoomIssuesPage from "@/pages/room-issues-page";
+import RoomIssueDetailPage from "@/pages/room-issue-detail-page";
+import ReportRoomIssuePage from "@/pages/report-room-issue-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
@@ -185,6 +188,31 @@ const Layout = () => {
                     element={
                       <ProtectedRoute>
                         <RentalDetailPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  {/* Room Issues - Protected routes */}
+                  <Route
+                    path="/room-issues"
+                    element={
+                      <ProtectedRoute>
+                        <RoomIssuesPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/room-issues/:id"
+                    element={
+                      <ProtectedRoute>
+                        <RoomIssueDetailPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/report-room-issue/:rentalId"
+                    element={
+                      <ProtectedRoute>
+                        <ReportRoomIssuePage />
                       </ProtectedRoute>
                     }
                   ></Route>
