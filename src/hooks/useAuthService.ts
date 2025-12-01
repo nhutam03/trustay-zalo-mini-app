@@ -9,9 +9,10 @@ import {
 	sendPhoneVerification,
 	verifyPhoneCode,
 	registerWithVerification,
-	performZaloRegistration,
-	loginWithZaloPhone,
+	registerWithZaloToken,
+	loginWithZaloToken,
 	getZaloUserInfo,
+	getZaloAccessToken,
 	type UserProfile,
 	type RegisterRequest,
 	type AuthResponse,
@@ -52,12 +53,12 @@ export const useAuthStatus = () => {
 };
 
 // Get Zalo user info
-export const useZaloUserInfo = (includePhone: boolean = false) => {
+export const useZaloUserInfo = () => {
 	return useQuery({
-		queryKey: [...authKeys.zaloInfo(), includePhone],
-		queryFn: () => getZaloUserInfo(includePhone),
+		queryKey: authKeys.zaloInfo(),
+		queryFn: () => getZaloUserInfo(),
 		enabled: false, // Only fetch when manually triggered
-		staleTime: 2 * 60 * 1000, // 2 minutes (phone token expires in 2 minutes)
+		staleTime: 5 * 60 * 1000, // 5 minutes
 	});
 };
 
@@ -76,12 +77,12 @@ export const useLogin = () => {
 	});
 };
 
-// Login with Zalo phone
-export const useLoginWithZaloPhone = () => {
+// Login with Zalo token
+export const useLoginWithZaloToken = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: (phone: string) => loginWithZaloPhone(phone),
+		mutationFn: (accessToken: string) => loginWithZaloToken(accessToken),
 		onSuccess: (data) => {
 			queryClient.setQueryData(authKeys.me(), data.user);
 			queryClient.invalidateQueries({ queryKey: authKeys.status() });
@@ -149,12 +150,21 @@ export const useRegisterWithVerification = () => {
 	});
 };
 
-// Perform Zalo registration
-export const usePerformZaloRegistration = () => {
+// Register with Zalo token
+export const useRegisterWithZaloToken = () => {
 	const queryClient = useQueryClient();
 
 	return useMutation({
-		mutationFn: performZaloRegistration,
+		mutationFn: ({
+			accessToken,
+			additionalData,
+		}: {
+			accessToken: string;
+			additionalData?: {
+				role?: 'tenant' | 'landlord';
+				gender?: 'male' | 'female' | 'other';
+			};
+		}) => registerWithZaloToken(accessToken, additionalData),
 		onSuccess: (data) => {
 			queryClient.setQueryData(authKeys.me(), data.user);
 			queryClient.invalidateQueries({ queryKey: authKeys.status() });

@@ -136,39 +136,35 @@ export const registerWithVerification = async (
 };
 
 /**
- * Flow đăng ký đầy đủ cho Zalo Mini App
+ * Đăng ký với Zalo Access Token
+ * Gửi access token và thông tin bổ sung lên backend để tạo tài khoản mới
  *
- * @param userData - Thông tin đăng ký từ Zalo
+ * @param zaloAccessToken - Access token nhận được từ Zalo authorize()
+ * @param additionalData - Thông tin bổ sung (role, gender, etc.)
  * @returns AuthResponse với access_token, refresh_token, user
  */
-export const performZaloRegistration = async (
+export const registerWithZaloToken = async (
+  zaloAccessToken: string,
+  additionalData?: {
+    role?: 'tenant' | 'landlord';
+    gender?: 'male' | 'female' | 'other';
+  }
 ): Promise<AuthResponse> => {
-  // Lấy thông tin user từ Zalo
-  const zaloUser = await getZaloUserInfo(true);
   try {
-    // Bước 1: Gửi OTP verification
-    console.log('Step 1: Sending phone verification for:', zaloUser.phone);
-    const verificationResponse = await sendPhoneVerification(zaloUser.phone);
+    const response = await apiClient.post<AuthResponse>('/api/auth/zalo-register', {
+      accessToken: zaloAccessToken,
+      ...additionalData,
+    });
 
-    if (!verificationResponse.verificationToken) {
-      throw new Error('Không nhận được verification token');
-    }
+    const { access_token, refresh_token, user } = response.data;
 
-    // Bước 2: Verify OTP (mặc định 123456)
-    console.log('Step 2: Verifying OTP with default code: 123456');
-    await verifyPhoneCode(zaloUser.phone, DEFAULT_OTP);
+    TokenManager.setAccessToken(access_token);
+    TokenManager.setRefreshToken(refresh_token);
 
-    // Bước 3: Đăng ký với verification token
-    console.log('Step 3: Registering user with verification token');
-    const authResponse = await registerWithVerification(
-      zaloUser,
-      verificationResponse.verificationToken
-    );
-
-    return authResponse;
+    return response.data;
   } catch (error) {
-    console.error('Error in Zalo registration flow:', error);
-    throw error;
+    console.error('Error registering with Zalo token:', error);
+    throw new Error(extractErrorMessage(error, 'Đăng ký thất bại'));
   }
 };
 
@@ -192,15 +188,35 @@ export const convertPhoneToken = async (token: string): Promise<string> => {
 };
 
 /**
- * Lấy thông tin user từ Zalo
+ * Lấy Zalo Access Token để xác thực với backend
  *
- * @param includePhone - Có lấy số điện thoại hay không (cần phê duyệt từ Zalo)
- * @returns Object chứa thông tin user (id, name, avatar, phone)
- *
- * Note: Số điện thoại được lấy thông qua token và convert ở backend
- * Token có hiệu lực 2 phút và chỉ dùng được 1 lần
+ * @returns Zalo access token
  */
-export const getZaloUserInfo = async (includePhone: boolean = false): Promise<any> => {
+export const getZaloAccessToken = async (): Promise<string> => {
+  try {
+    const response = await authorize({
+      scopes: ['scope.userInfo', 'scope.userPhonenumber']
+    });
+
+    const accessToken = (response as any).accessToken;
+
+    if (!accessToken) {
+      throw new Error('Không nhận được access token từ Zalo');
+    }
+
+    return accessToken;
+  } catch (error) {
+    console.error('Error getting Zalo access token:', error);
+    throw new Error(extractErrorMessage(error, 'Không thể lấy quyền truy cập từ Zalo'));
+  }
+};
+
+/**
+ * Lấy thông tin user từ Zalo (chỉ dùng cho UI hiển thị)
+ *
+ * @returns Object chứa thông tin user (id, name, avatar)
+ */
+export const getZaloUserInfo = async (): Promise<any> => {
   try {
     // Lấy thông tin cơ bản của user
     const { userInfo } = await getUserInfo({});
@@ -210,28 +226,6 @@ export const getZaloUserInfo = async (includePhone: boolean = false): Promise<an
       name: userInfo.name,
       avatar: userInfo.avatar,
     };
-
-    // Request số điện thoại nếu cần (cần được phê duyệt bởi Zalo)
-    if (includePhone) {
-      try {
-        // Lấy phone token từ Zalo
-        const { token } = await getPhoneNumber({});
-
-        if (token) {
-          console.log('Phone token obtained, converting to phone number...');
-
-          // Convert token thành số điện thoại thực qua backend
-          const phone = await convertPhoneToken(token);
-          result.phone = phone;
-
-          console.log('Phone number obtained successfully');
-        }
-      } catch (phoneError) {
-        console.warn('Could not get phone number (may not be approved):', phoneError);
-        // Không throw error, vì phone number có thể chưa được phê duyệt
-        // App vẫn hoạt động được mà không có số điện thoại
-      }
-    }
 
     return result;
   } catch (error) {
@@ -264,14 +258,16 @@ export const login = async (identifier: string, password: string): Promise<AuthR
 };
 
 /**
- * Đăng nhập tự động với số điện thoại Zalo
- * Thử đăng nhập bằng số điện thoại, nếu chưa có tài khoản sẽ throw error
+ * Đăng nhập với Zalo Access Token
+ * Gửi access token lên backend để xác thực và tạo/đăng nhập tài khoản
+ *
+ * @param zaloAccessToken - Access token nhận được từ Zalo authorize()
+ * @returns AuthResponse với access_token, refresh_token, user
  */
-export const loginWithZaloPhone = async (phone: string): Promise<AuthResponse> => {
+export const loginWithZaloToken = async (zaloAccessToken: string): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/api/auth/login', {
-      identifier: phone,
-      password: phone, // Dùng phone làm password tạm cho Zalo login
+    const response = await apiClient.post<AuthResponse>('/api/auth/zalo-login', {
+      accessToken: zaloAccessToken,
     });
 
     const { access_token, refresh_token, user } = response.data;
@@ -281,7 +277,7 @@ export const loginWithZaloPhone = async (phone: string): Promise<AuthResponse> =
 
     return response.data;
   } catch (error) {
-    console.error('Error logging in with Zalo phone:', error);
+    console.error('Error logging in with Zalo token:', error);
     throw error;
   }
 };
@@ -361,5 +357,25 @@ export const checkAuthStatus = async (): Promise<boolean> => {
   } catch (error) {
     TokenManager.clearAllTokens();
     return false;
+  }
+};
+
+/**
+ * Liên kết tài khoản Zalo với tài khoản hiện tại
+ * Dùng để liên kết số điện thoại Zalo với tài khoản đã đăng nhập
+ *
+ * @param zaloAccessToken - Access token nhận được từ Zalo authorize()
+ * @returns UserProfile đã được cập nhật
+ */
+export const linkZaloAccount = async (zaloAccessToken: string): Promise<UserProfile> => {
+  try {
+    const response = await apiClient.post<{ user: UserProfile }>('/api/auth/link-zalo', {
+      accessToken: zaloAccessToken,
+    });
+
+    return response.data.user;
+  } catch (error) {
+    console.error('Error linking Zalo account:', error);
+    throw new Error(extractErrorMessage(error, 'Liên kết tài khoản Zalo thất bại'));
   }
 };

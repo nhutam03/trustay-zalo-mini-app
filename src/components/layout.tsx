@@ -39,6 +39,7 @@ import AIAssistantPage from "@/pages/ai-assistant-page";
 import SettingsPage from "@/pages/settings-page";
 import SavedRoomsPage from "@/pages/saved-rooms-page";
 import HelpCenterPage from "@/pages/help-center-page";
+import LinkAccountPage from "@/pages/link-account-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
@@ -193,6 +194,14 @@ const Layout = () => {
                   <Route path="/settings" element={<SettingsPage />}></Route>
                   <Route path="/saved-rooms" element={<SavedRoomsPage />}></Route>
                   <Route path="/help" element={<HelpCenterPage />}></Route>
+                  <Route
+                    path="/link-account"
+                    element={
+                      <ProtectedRoute>
+                        <LinkAccountPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
 
                   {/* Profile Edit Routes */}
                   <Route path="/profile/edit-name" element={<EditNamePage />}></Route>

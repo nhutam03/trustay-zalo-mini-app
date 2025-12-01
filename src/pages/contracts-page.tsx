@@ -91,8 +91,8 @@ const ContractsPage: React.FC = () => {
 				options: { includeSignatures: true },
 			});
 			// Open PDF in new tab or download
-			if (result.data?.pdfUrl) {
-				window.open(result.data.pdfUrl, '_blank');
+			if (result.pdfUrl) {
+				window.open(result.pdfUrl, '_blank');
 			}
 			alert('PDF đã được tạo thành công');
 		} catch (error) {

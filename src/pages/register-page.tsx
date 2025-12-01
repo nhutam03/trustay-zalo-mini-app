@@ -4,7 +4,7 @@ import { Page, Box, Button, Icon, Input } from "zmp-ui";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import {
-  getZaloUserInfo,
+  // getZaloUserInfo, // COMMENT: Tạm thời tắt đăng ký với Zalo
   sendPhoneVerification,
   verifyPhoneCode,
   registerWithVerification,
@@ -40,30 +40,31 @@ const RegisterPage: React.FC = () => {
     });
     changeStatusBarColor("primary");
 
-    // Tự động lấy thông tin từ Zalo
-    loadZaloInfo();
+    // COMMENT: Tự động lấy thông tin từ Zalo - tạm thời tắt trong development
+    // loadZaloInfo();
   }, []);
 
-  const loadZaloInfo = async () => {
-    try {
-      // Thử lấy thông tin Zalo (bao gồm cả phone nếu được phê duyệt)
-      const zaloInfo = await getZaloUserInfo(true);
+  // COMMENT: Tạm thời tắt đăng ký với Zalo trong development
+  // const loadZaloInfo = async () => {
+  //   try {
+  //     // Thử lấy thông tin Zalo (bao gồm cả phone nếu được phê duyệt)
+  //     const zaloInfo = await getZaloUserInfo(true);
 
-      // Tự động điền thông tin từ Zalo
-      if (zaloInfo.name) {
-        const nameParts = zaloInfo.name.split(" ");
-        setFormData(prev => ({
-          ...prev,
-          firstName: nameParts.slice(0, -1).join(" ") || zaloInfo.name,
-          lastName: nameParts[nameParts.length - 1] || "",
-          phone: zaloInfo.phone || "",
-        }));
-      }
-    } catch (error) {
-      console.error("Error loading Zalo info:", error);
-      // Không hiển thị lỗi, để user tự nhập thông tin
-    }
-  };
+  //     // Tự động điền thông tin từ Zalo
+  //     if (zaloInfo.name) {
+  //       const nameParts = zaloInfo.name.split(" ");
+  //       setFormData(prev => ({
+  //         ...prev,
+  //         firstName: nameParts.slice(0, -1).join(" ") || zaloInfo.name,
+  //         lastName: nameParts[nameParts.length - 1] || "",
+  //         phone: zaloInfo.phone || "",
+  //       }));
+  //     }
+  //   } catch (error) {
+  //     console.error("Error loading Zalo info:", error);
+  //     // Không hiển thị lỗi, để user tự nhập thông tin
+  //   }
+  // };
 
   const handleInputChange = (field: keyof RegisterRequest) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -129,7 +130,7 @@ const RegisterPage: React.FC = () => {
     <Page className="bg-gray-50">
       <Box className="p-4 space-y-4">
         {/* Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        {/* <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex gap-3">
             <Icon icon="zi-info-circle" size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -142,7 +143,7 @@ const RegisterPage: React.FC = () => {
               </p>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Error Message */}
         {error && (

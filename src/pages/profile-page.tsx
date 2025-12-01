@@ -96,6 +96,13 @@ const ProfilePage: React.FC = () => {
     // Các dòng bổ sung
     items.push(
       {
+        id: "link-account",
+        label: "Liên kết tài khoản",
+        icon: "zi-user-plus",
+        route: "/link-account",
+        description: "Liên kết số điện thoại Zalo",
+      },
+      {
         id: "ai-assistant",
         label: "Trợ lý AI",
         icon: "zi-star",
