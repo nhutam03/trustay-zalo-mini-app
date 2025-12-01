@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 const LinkAccountPage: React.FC = () => {
   const navigate = useNavigate();
   const setHeader = useSetHeader();
-  const { refreshUser } = useAuth();
+  const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -35,8 +35,8 @@ const LinkAccountPage: React.FC = () => {
 
       console.log("Account linked successfully");
 
-      // Refresh user info
-      await refreshUser();
+      // Update auth state and refresh user info
+      await authLogin();
 
       // Show success message
       setSuccess(true);

@@ -15,7 +15,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
   const setHeader = useSetHeader();
-  const { refreshUser } = useAuth();
+  const { login: authLogin } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,8 +112,8 @@ const RegisterPage: React.FC = () => {
 
       console.log("Registration successful:", authResponse);
 
-      // Refresh user info in AuthProvider
-      await refreshUser();
+      // Update auth state and fetch user data
+      await authLogin();
 
       // Navigate to home
       navigate("/", { replace: true });

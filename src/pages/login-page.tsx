@@ -8,7 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const setHeader = useSetHeader();
-  const { refreshUser } = useAuth();
+  const { login: authLogin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,8 +40,8 @@ const LoginPage: React.FC = () => {
 
       console.log("Manual login successful:", loginResponse);
 
-      // Refresh user info
-      await refreshUser();
+      // Update auth state and fetch user data
+      await authLogin();
 
       // Navigate to home
       navigate("/", { replace: true });

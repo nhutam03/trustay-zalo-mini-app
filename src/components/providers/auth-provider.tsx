@@ -5,7 +5,6 @@ import {
   isAuthenticated,
   getCurrentUser,
   logout as logoutService,
-  loginWithZaloPhone,
   getZaloUserInfo,
   type UserProfile,
 } from "@/services/auth-service";
@@ -81,6 +80,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // Auto-fetch user data when logged in but no user data yet
+  useEffect(() => {
+    if (isLoggedIn && !user && !fetchingUserRef.current) {
+      console.log("User logged in but no data, fetching...");
+      fetchUser();
+    }
+  }, [isLoggedIn, user]);
+
   /**
    * Khởi tạo authentication khi app start
    * CHỈ CHECK LOCAL STORAGE - KHÔNG GỌI API
@@ -104,14 +111,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   /**
+   * Fetch user data from backend
+   */
+  const fetchUser = async () => {
+    if (fetchingUserRef.current) {
+      console.log("Already fetching user, skipping...");
+      return;
+    }
+
+    try {
+      fetchingUserRef.current = true;
+      setLoading(true);
+
+      const userData = await getCurrentUser();
+      console.log("User data fetched:", userData);
+      
+      setUser(userData);
+      // Cache user data in React Query
+      queryClient.setQueryData(authKeys.me(), userData);
+    } catch (error) {
+      console.error("Failed to fetch user:", error);
+      // If fetch fails, clear auth state
+      setUser(null);
+      setIsLoggedIn(false);
+    } finally {
+      setLoading(false);
+      fetchingUserRef.current = false;
+    }
+  };
+
+  /**
    * Manual login placeholder
    * Actual login happens in LoginPage using auth-service directly
    * This just updates local state after successful login
    */
   const login = async () => {
+    console.log("Login called, updating auth state...");
     // After login via auth-service, update state
     if (isAuthenticated()) {
       setIsLoggedIn(true);
+      // Fetch user data immediately
+      await fetchUser();
     }
   };
 
