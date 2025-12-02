@@ -6,12 +6,16 @@ import { apiClient, extractErrorMessage } from '@/lib/api-client';
 
 export interface Building {
 	id: string;
+	slug: string;
 	name: string;
-	address: string;
+	description?: string;
+	addressLine1: string;
+	addressLine2?: string;
+	country: string;
+	roomCount: number;
 	provinceId: number;
 	districtId: number;
 	wardId?: number;
-	description?: string;
 	ownerId: string;
 	totalRooms: number;
 	totalRoomInstances: number;
@@ -24,8 +28,7 @@ export interface Building {
 		id: string;
 		firstName: string;
 		lastName: string;
-		email: string;
-		phone: string;
+		isVerifiedIdentity: boolean;
 		avatarUrl?: string;
 	};
 	location?: {
@@ -88,10 +91,22 @@ export const getBuildings = async (params?: {
 		const response = await apiClient.get<{
 			success: boolean;
 			message: string;
-			data: BuildingsListResponse;
+			data: {
+				buildings: Building[];
+				[key: string]: any;
+			};
 		}>(endpoint);
 
-		return response.data.data;
+		// Map response to expected format
+		return {
+			data: response.data.data.buildings || [],
+			meta: {
+				page: params?.page || 1,
+				limit: params?.limit || 10,
+				total: response.data.data.buildings?.length || 0,
+				totalPages: 1,
+			}
+		};
 	} catch (error) {
 		console.error('Error getting buildings:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách dãy trọ'));

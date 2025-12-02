@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Box, Icon } from "zmp-ui";
-import BottomNav from "../components/navigate-bottom";
+import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useAuth } from "@/components/providers/auth-provider";

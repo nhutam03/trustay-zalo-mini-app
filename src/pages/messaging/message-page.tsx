@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Page, Box, Avatar, Input } from "zmp-ui";
-import BottomNav from "../components/navigate-bottom";
+import BottomNav from "@/components/navigate-bottom";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import { useChatStore } from "@/hooks/useChatStore";

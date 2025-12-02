@@ -12,8 +12,6 @@ export interface Room {
 	roomType: string;
 	areaSqm: number;
 	maxOccupancy: number;
-	basePriceMonthly: number;
-	depositAmount?: number;
 	floorNumber?: number;
 	totalRooms: number;
 	availableRooms: number;
@@ -42,26 +40,39 @@ export interface Room {
 		alt: string;
 		isPrimary: boolean;
 	}>;
-}
-
-export interface RoomsListResponse {
-	data: Room[];
-	meta: {
-		page: number;
-		limit: number;
-		total: number;
-		totalPages: number;
+	pricing: {
+		basePriceMonthly: number;
+		depositAmount?: number;
+		utilityIncluded?: boolean;
 	};
 }
 
+export interface RoomsListResponse {
+	rooms: Room[],
+	total: number,
+	page: number,
+	limit: number,
+	totalPages: number,
+}
+
 export interface RoomInstancesResponse {
-	data: Array<{
-		id: string;
-		roomNumber: string;
-		status: string;
-		floorNumber?: number;
-		notes?: string;
-	}>;
+	data: {
+		instances: Array<{
+			id: string;
+			roomNumber: string;
+			status: 'available' | 'occupied' | 'maintenance' | 'reserved' | 'unavailable';
+			notes?: string;
+			updatedAt: string;
+			isActive: boolean;
+		}>;
+		statusCounts: {
+			available: number;
+			occupied: number;
+			maintenance: number;
+			reserved: number;
+			unavailable: number;
+		};
+	}
 }
 
 export interface CreateRoomRequest {

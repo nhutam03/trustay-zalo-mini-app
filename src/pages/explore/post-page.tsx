@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Page, Box, Input, Button, Icon, Select } from 'zmp-ui';
+import { Page, Box, Input, Icon, Select } from 'zmp-ui';
 import { useNavigate } from 'react-router-dom';
-import BottomNav from '../components/navigate-bottom';
+import BottomNav from '@/components/navigate-bottom';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import { createRoom, CreateRoomRequest } from '@/services/room';

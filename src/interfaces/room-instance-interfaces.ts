@@ -7,6 +7,13 @@ export type RoomStatus =
 	| 'maintenance'  // Đang bảo trì
 	| 'reserved'     // Đã đặt trước
 	| 'unavailable'; // Không khả dụng
+export const ROOM_INSTANCE_STATUS_LABELS: Record<RoomStatus, string> = {
+	available: 'Trống',
+	occupied: 'Đang thuê',
+	maintenance: 'Đang bảo trì',
+	reserved: 'Đã đặt trước',
+	unavailable: 'Không khả dụng',
+};
 
 // Query DTOs
 export interface RoomInstanceSearchParams {

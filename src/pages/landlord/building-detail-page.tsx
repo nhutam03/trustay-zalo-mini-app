@@ -4,9 +4,11 @@ import { Page, Box, Icon, Button } from "zmp-ui";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import BottomNav from "@/components/navigate-bottom";
+import parse from "html-react-parser";
 import { useBuilding, useDeleteBuilding } from "@/hooks/useBuildingService";
 import { useRoomsByBuilding } from "@/hooks/useRoomManagementService";
 import { processImageUrl } from "@/utils/image-proxy";
+import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
 
 const BuildingDetailPage: React.FC = () => {
   const setHeader = useSetHeader();
@@ -67,7 +69,7 @@ const BuildingDetailPage: React.FC = () => {
     );
   }
 
-  const rooms = roomsData?.data || [];
+  const rooms = roomsData?.rooms || [];
 
   return (
     <Page className="bg-gray-50">
@@ -106,7 +108,7 @@ const BuildingDetailPage: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-2">{building.name}</h2>
               <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                 <Icon icon="zi-location" size={16} />
-                <span>{building.address}</span>
+                <span>{building.addressLine1}</span>
               </div>
               {building.location && (
                 <p className="text-sm text-gray-500">
@@ -133,14 +135,14 @@ const BuildingDetailPage: React.FC = () => {
 
           {building.description && (
             <div className="mb-4">
-              <p className="text-sm text-gray-700">{building.description}</p>
+              <p className="text-sm text-gray-700">{parse(building.description)}</p>
             </div>
           )}
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <p className="text-2xl font-bold text-blue-600">{building.totalRooms}</p>
+              <p className="text-2xl font-bold text-blue-600">{building.roomCount}</p>
               <p className="text-xs text-gray-600 mt-1">Tổng loại phòng</p>
             </div>
             <div className="bg-green-50 rounded-lg p-3 text-center">
@@ -200,7 +202,6 @@ const BuildingDetailPage: React.FC = () => {
                 <p className="font-semibold text-gray-900">
                   {building.owner.firstName} {building.owner.lastName}
                 </p>
-                <p className="text-sm text-gray-600">{building.owner.phone}</p>
               </div>
             </div>
           </div>
@@ -212,7 +213,7 @@ const BuildingDetailPage: React.FC = () => {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-gray-900">
-              Danh sách phòng ({rooms.length})
+              Danh sách phòng ({roomsData?.total || 0})
             </h3>
             <button
               onClick={() => navigate(`/buildings/${id}/rooms/create`)}
@@ -230,7 +231,7 @@ const BuildingDetailPage: React.FC = () => {
             </div>
           )}
 
-          {!roomsLoading && rooms.length === 0 && (
+          {!roomsLoading && roomsData?.total === 0 && (
             <div className="text-center py-8">
               <Icon icon="zi-home" size={48} className="text-gray-300 mx-auto mb-3" />
               <p className="text-gray-600 mb-4">Chưa có phòng nào</p>
@@ -243,9 +244,9 @@ const BuildingDetailPage: React.FC = () => {
             </div>
           )}
 
-          {!roomsLoading && rooms.length > 0 && (
+          {!roomsLoading && (roomsData?.rooms?.length ?? 0) > 0 && (
             <div className="space-y-3">
-              {rooms.map((room) => (
+              {roomsData?.rooms?.map((room) => (
                 <div
                   key={room.id}
                   onClick={() => navigate(`/rooms/${room.id}/manage`)}
@@ -268,14 +269,14 @@ const BuildingDetailPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-gray-900 mb-1">{room.name}</h4>
                       <p className="text-sm text-gray-600 mb-2">
-                        {room.roomType} • {room.areaSqm}m²
+                        {ROOM_TYPE_LABELS[room.roomType]} • {room.areaSqm}m²
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-primary font-bold text-sm">
                           {new Intl.NumberFormat("vi-VN", {
                             style: "currency",
                             currency: "VND",
-                          }).format(room.basePriceMonthly)}
+                          }).format(room.pricing.basePriceMonthly)}
                         </span>
                         <span className="text-xs text-gray-500">
                           {room.availableRooms}/{room.totalRooms} trống

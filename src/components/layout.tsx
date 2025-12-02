@@ -9,53 +9,74 @@ import {
 import SnackbarProvider from "zmp-ui/snackbar-provider";
 import { AppProps } from "zmp-ui/app";
 
+// Main pages
 import HomePage from "@/pages/index";
-import ExplorePage from "@/pages/explore-page";
-import SearchPage from "@/pages/search-page";
-import MessagesPage from "@/pages/message-page";
-import ConversationPage from "@/pages/conversation-page";
-import PostRoomPage from "@/pages/post-page";
-import ProfilePage from "@/pages/profile-page";
-import ProfileDetailPage from "@/pages/profile-detail-page";
-import RoomDetailPage from "@/pages/room-detail-page";
-import RoomSeekingDetailPage from "@/pages/room-seeking-detail-page";
-import RoommateDetailPage from "@/pages/roommate-detail-page";
-import LoginPage from "@/pages/login-page";
-import RegisterPage from "@/pages/register-page";
-import BookingRequestsPage from "@/pages/booking-requests-page";
-import ContractsPage from "@/pages/contracts-page";
-import ContractDetailPage from "@/pages/contract-detail-page";
-import NotificationsPage from "@/pages/notifications-page";
-import RentalsPage from "@/pages/rentals-page";
-import RentalDetailPage from "@/pages/rental-detail-page";
-import InvoicesPage from "@/pages/invoices-page";
-import InvoiceDetailPage from "@/pages/invoice-detail-page";
-import UpdateBillMeterPage from "@/pages/update-bill-meter-page";
-import GenerateMonthlyBillsPage from "@/pages/generate-monthly-bills-page";
+
+// Auth pages
+import LoginPage from "@/pages/auth/login-page";
+import RegisterPage from "@/pages/auth/register-page";
+import LinkAccountPage from "@/pages/auth/link-account-page";
+
+// Explore pages
+import ExplorePage from "@/pages/explore/explore-page";
+import SearchPage from "@/pages/explore/search-page";
+import RoomDetailPage from "@/pages/explore/room-detail-page";
+import RoomSeekingDetailPage from "@/pages/explore/room-seeking-detail-page";
+import RoommateDetailPage from "@/pages/explore/roommate-detail-page";
+import SavedRoomsPage from "@/pages/explore/saved-rooms-page";
+import TenantPreferencesPage from "@/pages/explore/tenant-preferences-page";
+import PostRoomPage from "@/pages/explore/post-page";
+
+// Messaging pages
+import MessagesPage from "@/pages/messaging/message-page";
+import ConversationPage from "@/pages/messaging/conversation-page";
+
+// Contracts pages
+import BookingRequestsPage from "@/pages/contracts/booking-requests-page";
+import ContractsPage from "@/pages/contracts/contracts-page";
+import ContractDetailPage from "@/pages/contracts/contract-detail-page";
+import RentalsPage from "@/pages/contracts/rentals-page";
+import RentalDetailPage from "@/pages/contracts/rental-detail-page";
+
+// Payments pages
+import PaymentsPage from "@/pages/payments/payments-page";
+import PaymentDetailPage from "@/pages/payments/payment-detail-page";
+import InvoicesPage from "@/pages/payments/invoices-page";
+import InvoiceDetailPage from "@/pages/payments/invoice-detail-page";
+import UpdateBillMeterPage from "@/pages/payments/update-bill-meter-page";
+import GenerateMonthlyBillsPage from "@/pages/payments/generate-monthly-bills-page";
+
+// Room Issues pages
+import RoomIssuesPage from "@/pages/room-issues/room-issues-page";
+import RoomIssuesManagementPage from "@/pages/room-issues/room-issues-management-page";
+import RoomIssueDetailPage from "@/pages/room-issues/room-issue-detail-page";
+import ReportRoomIssuePage from "@/pages/room-issues/report-room-issue-page";
+
+// Landlord pages
+import BuildingsPage from "@/pages/landlord/buildings-page";
+import BuildingDetailPage from "@/pages/landlord/building-detail-page";
+import BuildingFormPage from "@/pages/landlord/building-form-page";
+import RoomsPage from "@/pages/landlord/rooms-page";
+import RoomDetailManagementPage from "@/pages/landlord/room-detail-management-page";
+import RoomFormPage from "@/pages/landlord/room-form-page";
+import RoomInstanceDetailPage from "@/pages/landlord/room-instance-detail-page";
+
+// Profile pages
+import ProfilePage from "@/pages/profile/profile-page";
+import ProfileDetailPage from "@/pages/profile/profile-detail-page";
+import NotificationsPage from "@/pages/profile/notifications-page";
+import SettingsPage from "@/pages/profile/settings-page";
 import EditNamePage from "@/pages/profile/EditNamePage";
 import EditBioPage from "@/pages/profile/EditBioPage";
 import EditGenderPage from "@/pages/profile/EditGenderPage";
 import EditDateOfBirthPage from "@/pages/profile/EditDateOfBirthPage";
 import EditBankInfoPage from "@/pages/profile/EditBankInfoPage";
-import AIAssistantPage from "@/pages/ai-assistant-page";
-import SettingsPage from "@/pages/settings-page";
-import SavedRoomsPage from "@/pages/saved-rooms-page";
-import HelpCenterPage from "@/pages/help-center-page";
-import LinkAccountPage from "@/pages/link-account-page";
-import RoomIssuesPage from "@/pages/room-issues-page";
-import RoomIssueDetailPage from "@/pages/room-issue-detail-page";
-import ReportRoomIssuePage from "@/pages/report-room-issue-page";
-import RoomIssuesManagementPage from "@/pages/room-issues-management-page";
-import PaymentsPage from "@/pages/payments-page";
-import PaymentDetailPage from "@/pages/payment-detail-page";
-import TenantPreferencesPage from "@/pages/tenant-preferences-page";
-import BuildingsPage from "@/pages/buildings-page";
-import BuildingDetailPage from "@/pages/building-detail-page";
-import BuildingFormPage from "@/pages/building-form-page";
-import RoomsPage from "@/pages/rooms-page";
-import RoomDetailManagementPage from "@/pages/room-detail-management-page";
-import RoomFormPage from "@/pages/room-form-page";
-import RoomInstanceDetailPage from "@/pages/room-instance-detail-page";
+
+// AI pages
+import AIAssistantPage from "@/pages/ai/ai-assistant-page";
+
+// Other pages
+import HelpCenterPage from "@/pages/others/help-center-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";

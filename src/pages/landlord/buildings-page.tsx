@@ -6,6 +6,7 @@ import { changeStatusBarColor } from "@/utils/basic";
 import BottomNav from "@/components/navigate-bottom";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useBuildings } from "@/hooks/useBuildingService";
+import parse from "html-react-parser";
 
 const BuildingsPage: React.FC = () => {
   const setHeader = useSetHeader();
@@ -91,16 +92,18 @@ const BuildingsPage: React.FC = () => {
                       {building.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                      {building.address}
+                      {building.addressLine1}, {building.location?.wardName},{building.location?.districtName},{building.location?.provinceName}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                      {building.description
+                        ? parse(building.description)
+                        : "Chưa có mô tả"}
                     </p>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         <Icon icon="zi-home" size={14} />
-                        {building.totalRooms || 0} phòng
+                        {building.roomCount || 0} phòng
                       </span>
-                      {building.location?.districtName && (
-                        <span>Quận {building.location.districtName}</span>
-                      )}
                     </div>
                   </div>
 

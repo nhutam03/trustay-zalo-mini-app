@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page, Box, Icon } from "zmp-ui";
 import useSetHeader from "@/hooks/useSetHeader";
@@ -6,16 +6,23 @@ import { changeStatusBarColor } from "@/utils/basic";
 import BottomNav from "@/components/navigate-bottom";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useMyRooms } from "@/hooks/useRoomManagementService";
+import { useBuildings } from "@/hooks/useBuildingService";
 import { processImageUrl } from "@/utils/image-proxy";
+import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
 
 const RoomsPage: React.FC = () => {
   const setHeader = useSetHeader();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [filter, setFilter] = useState<"all" | "available" | "occupied">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBuilding, setSelectedBuilding] = useState<string>("all");
 
   // Fetch rooms của landlord
   const { data: rooms, isLoading } = useMyRooms();
+  
+  // Fetch buildings của landlord
+  const { data: buildingsData, isLoading: isBuildingsLoading } = useBuildings();
 
   useEffect(() => {
     setHeader({
@@ -26,12 +33,39 @@ const RoomsPage: React.FC = () => {
     changeStatusBarColor("primary");
   }, []);
 
-  // Filter rooms
-  const filteredRooms = rooms?.data?.filter((room) => {
-    if (filter === "available") return room.availableRooms > 0;
-    if (filter === "occupied") return room.availableRooms === 0 && room.totalRooms > 0;
-    return true;
-  });
+  // Debug log để check structure
+  useEffect(() => {
+    if (buildingsData) {
+      console.log('Buildings data:', buildingsData);
+    }
+  }, [buildingsData]);
+
+  // Filter rooms với search và building filter
+  const filteredRooms = useMemo(() => {
+    let result = rooms?.rooms || [];
+
+    // Filter by availability
+    if (filter === "available") {
+      result = result.filter((room) => room.availableRooms > 0);
+    } else if (filter === "occupied") {
+      result = result.filter((room) => room.availableRooms === 0 && room.totalRooms > 0);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter((room) =>
+        room.name.toLowerCase().includes(query)
+      );
+    }
+
+    // Filter by building
+    if (selectedBuilding !== "all") {
+      result = result.filter((room) => room.buildingId === selectedBuilding);
+    }
+
+    return result;
+  }, [rooms?.rooms, filter, searchQuery, selectedBuilding]);
 
   return (
     <Page className="bg-gray-50 has-bottom-nav">
@@ -48,6 +82,60 @@ const RoomsPage: React.FC = () => {
             <Icon icon="zi-plus" size={18} />
             <span className="text-sm font-medium">Thêm</span>
           </button>
+        </div>
+
+        {/* Search và Building Filter */}
+        <div className="space-y-3 mb-4">
+          {/* Search input */}
+          <div className="relative">
+            <Icon 
+              icon="zi-search" 
+              size={18} 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder="Tìm kiếm theo tên phòng..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <Icon icon="zi-close-circle-solid" size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Building filter dropdown */}
+          <div className="relative">
+            <Icon 
+              icon="zi-home" 
+              size={18} 
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10"
+            />
+            <select
+              value={selectedBuilding}
+              onChange={(e) => setSelectedBuilding(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-lg text-sm appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all cursor-pointer"
+              disabled={isBuildingsLoading}
+            >
+              <option value="all">Tất cả tòa nhà</option>
+              {buildingsData?.data?.map((building) => (
+                <option key={building.id} value={building.id}>
+                  {building.name}
+                </option>
+              ))}
+            </select>
+            <Icon 
+              icon="zi-chevron-down" 
+              size={18} 
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
+          </div>
         </div>
 
         {/* Filter tabs */}
@@ -127,7 +215,7 @@ const RoomsPage: React.FC = () => {
             {filteredRooms.map((room) => (
               <div
                 key={room.id}
-                onClick={() => navigate(`/rooms/${room.id}`)}
+                onClick={() => navigate(`/rooms/${room.id}/manage`)}
                 className="bg-white rounded-lg overflow-hidden active:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex gap-3 p-3">
@@ -176,7 +264,7 @@ const RoomsPage: React.FC = () => {
                     </div>
 
                     <p className="text-sm text-gray-600 mb-2 line-clamp-1">
-                      {room.roomType} • Tầng {room.floorNumber || "N/A"}
+                      {ROOM_TYPE_LABELS[room.roomType]} • Tầng {room.floorNumber || "N/A"}
                     </p>
 
                     <div className="flex items-center justify-between">
@@ -184,7 +272,7 @@ const RoomsPage: React.FC = () => {
                         {new Intl.NumberFormat("vi-VN", {
                           style: "currency",
                           currency: "VND",
-                        }).format(room.basePriceMonthly)}
+                        }).format(room.pricing.basePriceMonthly)}
                       </span>
                       <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span className="flex items-center gap-1">

@@ -10,13 +10,16 @@ import {
   useDeleteRoom,
 } from "@/hooks/useRoomManagementService";
 import { processImageUrl } from "@/utils/image-proxy";
+import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
+import parse from "html-react-parser";
+import { ROOM_INSTANCE_STATUS_LABELS } from "@/interfaces/room-instance-interfaces";
 
 const RoomDetailManagementPage: React.FC = () => {
   const setHeader = useSetHeader();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<"all" | "available" | "occupied">("all");
+  const [selectedTab, setSelectedTab] = useState<"all" | "available" | "occupied" | "maintenance" | "reserved" | "unavailable">("all");
 
   // Fetch room details
   const { data: room, isLoading: roomLoading } = useRoomManagement(id || "");
@@ -70,8 +73,6 @@ const RoomDetailManagementPage: React.FC = () => {
       </Page>
     );
   }
-
-  const instances = instancesData?.data || [];
 
   return (
     <Page className="bg-gray-50">
@@ -127,7 +128,7 @@ const RoomDetailManagementPage: React.FC = () => {
                 {new Intl.NumberFormat("vi-VN", {
                   style: "currency",
                   currency: "VND",
-                }).format(room.basePriceMonthly)}
+                }).format(room.pricing.basePriceMonthly)}
                 <span className="text-sm text-gray-500 font-normal">/tháng</span>
               </p>
             </div>
@@ -155,7 +156,7 @@ const RoomDetailManagementPage: React.FC = () => {
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-600 mb-1">Loại phòng</p>
-              <p className="font-semibold text-gray-900">{room.roomType}</p>
+              <p className="font-semibold text-gray-900">{ROOM_TYPE_LABELS[room.roomType]}</p>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <p className="text-xs text-gray-600 mb-1">Sức chứa</p>
@@ -189,7 +190,7 @@ const RoomDetailManagementPage: React.FC = () => {
           {room.description && (
             <div>
               <h3 className="text-sm font-semibold text-gray-900 mb-2">Mô tả</h3>
-              <p className="text-sm text-gray-700">{room.description}</p>
+              <p className="text-sm text-gray-700">{parse(room.description)}</p>
             </div>
           )}
         </div>
@@ -234,7 +235,7 @@ const RoomDetailManagementPage: React.FC = () => {
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-gray-900">
-              Danh sách phòng ({instances.length})
+              Danh sách phòng ({instancesData?.data?.instances?.length || 0})
             </h3>
             <button
               onClick={() => navigate(`/rooms/${id}/instances/create`)}
@@ -277,6 +278,36 @@ const RoomDetailManagementPage: React.FC = () => {
             >
               Đã cho thuê
             </button>
+            <button
+              onClick={() => setSelectedTab("maintenance")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedTab === "maintenance"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              Bảo trì
+            </button>
+            <button
+              onClick={() => setSelectedTab("reserved")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedTab === "reserved"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              Đã đặt trước
+            </button>
+            <button
+              onClick={() => setSelectedTab("unavailable")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+                selectedTab === "unavailable"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              Không khả dụng
+            </button>
           </div>
 
           {instancesLoading && (
@@ -286,7 +317,7 @@ const RoomDetailManagementPage: React.FC = () => {
             </div>
           )}
 
-          {!instancesLoading && instances.length === 0 && (
+          {!instancesLoading && (instancesData?.data?.instances?.length ?? 0) === 0 && (
             <div className="text-center py-8">
               <Icon icon="zi-home" size={48} className="text-gray-300 mx-auto mb-3" />
               <p className="text-gray-600 mb-4">Chưa có phòng nào</p>
@@ -299,9 +330,9 @@ const RoomDetailManagementPage: React.FC = () => {
             </div>
           )}
 
-          {!instancesLoading && instances.length > 0 && (
+          {!instancesLoading && (instancesData?.data?.instances?.length ?? 0) > 0 && (
             <div className="space-y-2">
-              {instances.map((instance) => (
+              {instancesData?.data?.instances?.map((instance) => (
                 <div
                   key={instance.id}
                   onClick={() => navigate(`/room-instances/${instance.id}`)}
@@ -324,13 +355,7 @@ const RoomDetailManagementPage: React.FC = () => {
                               : "bg-gray-50 text-gray-600"
                           }`}
                         >
-                          {instance.status === "available"
-                            ? "Trống"
-                            : instance.status === "occupied"
-                            ? "Đã thuê"
-                            : instance.status === "maintenance"
-                            ? "Bảo trì"
-                            : "Khác"}
+                          {ROOM_INSTANCE_STATUS_LABELS[instance.status]}
                         </span>
                       </div>
                       {instance.notes && (
