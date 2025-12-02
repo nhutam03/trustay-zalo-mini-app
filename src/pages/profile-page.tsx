@@ -66,6 +66,26 @@ const ProfilePage: React.FC = () => {
       description: "Quản lý yêu cầu đặt phòng",
     });
 
+    // Menu đặc biệt cho landlord
+    if (user?.role === "landlord") {
+      items.push(
+        {
+          id: "buildings",
+          label: "Quản lý tòa nhà",
+          icon: "zi-location",
+          route: "/buildings",
+          description: "Danh sách tòa nhà của bạn",
+        },
+        {
+          id: "rooms",
+          label: "Quản lý phòng",
+          icon: "zi-home",
+          route: "/rooms",
+          description: "Quản lý tất cả phòng trọ",
+        }
+      );
+    }
+
     // Dòng 2: Quản lý trọ/Quản lý cho thuê (tùy theo role)
     items.push({
       id: "rentals",

@@ -49,6 +49,13 @@ import RoomIssuesManagementPage from "@/pages/room-issues-management-page";
 import PaymentsPage from "@/pages/payments-page";
 import PaymentDetailPage from "@/pages/payment-detail-page";
 import TenantPreferencesPage from "@/pages/tenant-preferences-page";
+import BuildingsPage from "@/pages/buildings-page";
+import BuildingDetailPage from "@/pages/building-detail-page";
+import BuildingFormPage from "@/pages/building-form-page";
+import RoomsPage from "@/pages/rooms-page";
+import RoomDetailManagementPage from "@/pages/room-detail-management-page";
+import RoomFormPage from "@/pages/room-form-page";
+import RoomInstanceDetailPage from "@/pages/room-instance-detail-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
@@ -283,6 +290,88 @@ const Layout = () => {
                     element={
                       <ProtectedRoute>
                         <LinkAccountPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+
+                  {/* Landlord Management Routes - Protected */}
+                  <Route
+                    path="/buildings"
+                    element={
+                      <ProtectedRoute>
+                        <BuildingsPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/buildings/create"
+                    element={
+                      <ProtectedRoute>
+                        <BuildingFormPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/buildings/:id"
+                    element={
+                      <ProtectedRoute>
+                        <BuildingDetailPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/buildings/:id/edit"
+                    element={
+                      <ProtectedRoute>
+                        <BuildingFormPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/buildings/:id/rooms/create"
+                    element={
+                      <ProtectedRoute>
+                        <RoomFormPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/rooms"
+                    element={
+                      <ProtectedRoute>
+                        <RoomsPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/rooms/create"
+                    element={
+                      <ProtectedRoute>
+                        <RoomFormPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/rooms/:id/manage"
+                    element={
+                      <ProtectedRoute>
+                        <RoomDetailManagementPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/rooms/:id/edit"
+                    element={
+                      <ProtectedRoute>
+                        <RoomFormPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/room-instances/:id"
+                    element={
+                      <ProtectedRoute>
+                        <RoomInstanceDetailPage />
                       </ProtectedRoute>
                     }
                   ></Route>
