@@ -157,6 +157,74 @@ const LoginPage: React.FC = () => {
           >
             Bỏ qua, xem phòng trước
           </Button>
+
+          {/* Quick Login for Testing */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <p className="text-xs text-yellow-800 font-medium mb-3 flex items-center gap-1">
+              <Icon icon="zi-admin" size={16} />
+              Đăng nhập nhanh
+            </p>
+            <div className="flex flex-row gap-4">
+              <Button
+                fullWidth
+                size="medium"
+                onClick={async () => {
+                  setIdentifier("nhutam050@gmail.com");
+                  setPassword("Nhutam.03");
+                  // Trigger login after setting values
+                  setTimeout(async () => {
+                    try {
+                      setLoading(true);
+                      setError(null);
+                      const loginResponse = await login("nhutam050@gmail.com", "Nhutam.03");
+                      console.log("Landlord quick login successful:", loginResponse);
+                      await authLogin();
+                      navigate("/", { replace: true });
+                    } catch (err: any) {
+                      console.error("Landlord quick login error:", err);
+                      setError(err.message || "Đăng nhập thất bại");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }, 100);
+                }}
+                disabled={loading}
+                className="bg-purple-600 text-white text-sm"
+              >
+                <Icon icon="zi-user-circle" size={16} className="mr-1" />
+                Chủ trọ
+              </Button>
+              <Button
+                fullWidth
+                size="medium"
+                onClick={async () => {
+                  setIdentifier("nhutam0311@gmail.com");
+                  setPassword("Nhutam.03");
+                  // Trigger login after setting values
+                  setTimeout(async () => {
+                    try {
+                      setLoading(true);
+                      setError(null);
+                      const loginResponse = await login("nhutam0311@gmail.com", "Nhutam.03");
+                      console.log("Tenant quick login successful:", loginResponse);
+                      await authLogin();
+                      navigate("/", { replace: true });
+                    } catch (err: any) {
+                      console.error("Tenant quick login error:", err);
+                      setError(err.message || "Đăng nhập thất bại");
+                    } finally {
+                      setLoading(false);
+                    }
+                  }, 100);
+                }}
+                disabled={loading}
+                className="bg-green-600 text-white text-sm"
+              >
+                <Icon icon="zi-user" size={16} className="mr-1" />
+                Người thuê
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Terms and Privacy */}
