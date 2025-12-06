@@ -7,6 +7,8 @@ import { useBill, useMarkBillAsPaid, useCreatePayOSLink } from '@/hooks/useBillS
 import { useCreatePayment } from '@/hooks/usePaymentService';
 import { useAuth } from '@/components/providers/auth-provider';
 import { openWebview } from 'zmp-sdk/apis';
+import PaymentQRModal from '@/components/payment-qr-modal';
+import type { PayOSLinkResponse } from '@/interfaces/bill-interfaces';
 
 const InvoiceDetailPage: React.FC = () => {
 	const { id } = useParams();
@@ -14,6 +16,8 @@ const InvoiceDetailPage: React.FC = () => {
 	const setHeader = useSetHeader();
 	const { user } = useAuth();
 	const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+	const [showQRModal, setShowQRModal] = useState(false);
+	const [payosData, setPayosData] = useState<PayOSLinkResponse | null>(null);
 
 	// Use hooks
 	const { data: billData, isLoading: loading } = useBill(id || '', !!id);
@@ -57,20 +61,19 @@ const InvoiceDetailPage: React.FC = () => {
 				paymentMethod: 'e_wallet',
 			});
 
+			console.log('Payment created:', payment);
+
 			// Then create PayOS link
 			const response = await createPayOSLinkMutation.mutateAsync({
 				billId: id,
 			});
 
-			if (response.checkoutUrl) {
-				// Open PayOS checkout in webview
-				await openWebview({
-					url: response.checkoutUrl,
-					config: {
-						style: 'bottomSheet',
-						leftButton: 'back',
-					},
-				});
+			console.log('PayOS link created:', response);
+
+			if (response.checkoutUrl && response.qrCode) {
+				// Save PayOS data and show QR modal
+				setPayosData(response);
+				setShowQRModal(true);
 			} else {
 				throw new Error('Không nhận được link thanh toán');
 			}
@@ -133,9 +136,9 @@ const InvoiceDetailPage: React.FC = () => {
 					</div>
 
 					<div className="bg-primary bg-opacity-5 rounded-lg p-4 mt-4">
-						<p className="text-xs text-gray-600 mb-1">Tổng tiền</p>
-						<p className="text-2xl font-bold text-primary">
-							{Number(bill.totalAmount).toLocaleString('vi-VN')} đ
+						<p className="text-xs text-trustay-green-lighter mb-1">Tổng tiền</p>
+						<p className="text-2xl font-bold text-trustay-green-light">
+							{Number(bill.subtotal).toLocaleString('vi-VN')} đ
 						</p>
 					</div>
 				</div>
@@ -371,6 +374,19 @@ const InvoiceDetailPage: React.FC = () => {
 					</div>
 				</div>
 			</Box>
+
+			{/* PayOS QR Modal */}
+			{payosData && (
+				<PaymentQRModal
+					visible={showQRModal}
+					onClose={() => setShowQRModal(false)}
+					qrCode={payosData.qrCode || ''}
+					checkoutUrl={payosData.checkoutUrl}
+					amount={payosData.amount}
+					description={payosData.description}
+					orderCode={payosData.orderCode}
+				/>
+			)}
 		</Page>
 	);
 };

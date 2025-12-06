@@ -1,4 +1,5 @@
 import { apiClient, extractErrorMessage } from '@/lib/api-client';
+import type { PayOSLinkResponse } from '@/interfaces/bill-interfaces';
 
 // ========================
 // Types for Payment
@@ -11,7 +12,7 @@ export interface Payment {
 	billId?: string;
 	amount: number;
 	currency: string;
-	paymentType: 'rent' | 'deposit' | 'utility' | 'fee' | 'refund';
+	paymentType: 'rent' | 'deposit' | 'utility' | 'service' | 'refund';
 	paymentMethod: 'bank_transfer' | 'cash' | 'e_wallet' | 'card';
 	status: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 	payerId: string;
@@ -272,6 +273,22 @@ export const generatePaymentQRCode = async (id: string): Promise<{ qrCodeUrl: st
 	} catch (error) {
 		console.error('Error generating payment QR code:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tạo mã QR thanh toán'));
+	}
+};
+
+/**
+ * Get PayOS payment link for bill
+ */
+export const getPayOSLinkForBill = async (billId: string): Promise<PayOSLinkResponse> => {
+	try {
+		const response = await apiClient.post<PayOSLinkResponse>(
+			`/api/bills/${billId}/payos-link`,
+			{},
+		);
+		return response.data;
+	} catch (error) {
+		console.error('Error getting PayOS link:', error);
+		throw new Error(extractErrorMessage(error, 'Không thể tạo liên kết thanh toán PayOS'));
 	}
 };
 

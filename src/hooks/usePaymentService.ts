@@ -10,6 +10,7 @@ import {
 	getPaymentStatistics,
 	generatePaymentQRCode,
 	deletePayment,
+	getPayOSLinkForBill,
 } from '@/services/payment-service';
 import type {
 	CreatePaymentRequest,
@@ -93,6 +94,17 @@ export const usePaymentQRCode = (id: string, enabled = true) => {
 		queryFn: () => generatePaymentQRCode(id),
 		enabled: enabled && !!id,
 		staleTime: 10 * 60 * 1000, // 10 minutes
+	});
+};
+
+// Get PayOS link for bill
+export const usePayOSLink = (billId: string, enabled = true) => {
+	return useQuery({
+		queryKey: [...paymentKeys.all, 'payos', billId] as const,
+		queryFn: () => getPayOSLinkForBill(billId),
+		enabled: enabled && !!billId,
+		staleTime: 10 * 60 * 1000, // 10 minutes
+		retry: 1,
 	});
 };
 

@@ -8,10 +8,12 @@ import {
 	useUpdatePayment,
 	useCreatePaymentReceipt,
 	useProcessRefund,
+	usePayOSLink,
 } from '@/hooks/usePaymentService';
 import { formatCurrency } from '@/utils/format';
 import { formatPaymentMethod } from '@/utils/paymentUtils';
 import { useCurrentUser } from '@/hooks/useAuthService';
+import PaymentQRModal from '@/components/payment-qr-modal';
 
 const PaymentDetailPage: React.FC = () => {
 	const { id } = useParams<{ id: string }>();
@@ -25,6 +27,27 @@ const PaymentDetailPage: React.FC = () => {
 	const { data: currentUser } = useCurrentUser();
 	const { data: payment, isLoading, error } = usePayment(id || '', !!id);
 	const { data: qrCode } = usePaymentQRCode(id || '', !!id && payment?.status === 'pending');
+	
+	// Debug: Log payment data
+	React.useEffect(() => {
+		if (payment) {
+			console.log('Payment data:', payment);
+			console.log('Payment billId:', payment.billId);
+			console.log('Payment status:', payment.status);
+		}
+	}, [payment]);
+	
+	const { data: payosLink, isLoading: payosLoading, error: payosError } = usePayOSLink(
+		payment?.billId || '', 
+		!!payment?.billId && payment?.status === 'pending'
+	);
+	
+	// Debug: Log PayOS link data
+	React.useEffect(() => {
+		console.log('PayOS Link data:', payosLink);
+		console.log('PayOS Loading:', payosLoading);
+		console.log('PayOS Error:', payosError);
+	}, [payosLink, payosLoading, payosError]);
 
 	const updatePaymentMutation = useUpdatePayment();
 	const createReceiptMutation = useCreatePaymentReceipt();
@@ -32,6 +55,7 @@ const PaymentDetailPage: React.FC = () => {
 
 	const [showReceiptModal, setShowReceiptModal] = useState(false);
 	const [showRefundModal, setShowRefundModal] = useState(false);
+	const [showQRModal, setShowQRModal] = useState(false);
 	const [receiptData, setReceiptData] = useState({
 		receiptNumber: '',
 		notes: '',
@@ -221,22 +245,41 @@ const PaymentDetailPage: React.FC = () => {
 					</Box>
 				)}
 
+				{/* Debug info */}
+				<Box className="bg-yellow-50 rounded-lg p-4 text-xs">
+					<Text>Debug: billId = {payment.billId || 'null'}</Text>
+					<Text>Status = {payment.status}</Text>
+					<Text>PayOS Loading = {String(payosLoading)}</Text>
+					<Text>PayOS Link = {payosLink ? 'YES' : 'NO'}</Text>
+					{payosError && <Text className="text-red-600">Error: {String(payosError)}</Text>}
+				</Box>
+
 				{/* QR Code for pending payments */}
-				{payment.status === 'pending' && qrCode && (
+				{payment.billId && (payment.status === 'pending' || payment.status === 'completed') && (
 					<Box className="bg-white rounded-lg p-6 shadow-sm">
 						<Text className="font-semibold text-gray-800 mb-4 text-center">
-							Quét mã QR để thanh toán
+							Thanh toán qua PayOS
 						</Text>
-						<Box className="flex justify-center">
-							<img
-								src={qrCode.qrCodeUrl}
-								alt="QR Code"
-								className="w-64 h-64 border-2 border-gray-200 rounded-lg"
-							/>
-						</Box>
-						<Text className="text-xs text-gray-500 text-center mt-4">
-							Quét mã để thanh toán
-						</Text>
+						{payosLoading ? (
+							<Text className="text-center text-gray-600">Đang tải thông tin thanh toán...</Text>
+						) : payosLink ? (
+							<Box className="flex flex-col items-center gap-3">
+								<Button
+									fullWidth
+									variant="primary"
+									onClick={() => setShowQRModal(true)}
+								>
+									Hiển thị mã QR thanh toán
+								</Button>
+								<Text className="text-xs text-gray-500 text-center">
+									Quét mã QR hoặc mở link thanh toán để hoàn tất giao dịch
+								</Text>
+							</Box>
+						) : (
+							<Text className="text-center text-red-600">
+								Không thể tải thông tin thanh toán
+							</Text>
+						)}
 					</Box>
 				)}
 
@@ -380,6 +423,19 @@ const PaymentDetailPage: React.FC = () => {
 						</Box>
 					</Box>
 				</Modal>
+
+				{/* PayOS QR Modal */}
+				{payosLink && (
+					<PaymentQRModal
+						visible={showQRModal}
+						onClose={() => setShowQRModal(false)}
+						qrCode={payosLink.qrCode || ''}
+						checkoutUrl={payosLink.checkoutUrl}
+						amount={payosLink.amount}
+						description={payosLink.description}
+						orderCode={payosLink.orderCode}
+					/>
+				)}
 			</Box>
 		</Page>
 	);
