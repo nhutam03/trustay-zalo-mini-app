@@ -5,10 +5,7 @@ import { apiClient, extractErrorMessage, TokenManager } from '@/lib/api-client';
 import type { AIChatResponse, AIHistoryResponse } from '@/interfaces/ai';
 
 const AI_ENDPOINTS = {
-	chat: (query: string, currentPage?: string) => {
-		const baseUrl = `/api/ai/chat?query=${encodeURIComponent(query)}`;
-		return currentPage ? `${baseUrl}&currentPage=${encodeURIComponent(currentPage)}` : baseUrl;
-	},
+	chat: '/api/ai/chat',
 	history: '/api/ai/chat/history',
 	text2sql: '/api/ai/text2sql',
 };
@@ -25,9 +22,12 @@ export const postAIChat = async (
 ): Promise<AIChatResponse> => {
 	try {
 		const response = await apiClient.post<{ success: boolean; data: AIChatResponse }>(
-			AI_ENDPOINTS.chat(query, currentPage),
-			{},
-			{ timeout: 0 }, // Không timeout cho AI requests
+			AI_ENDPOINTS.chat,
+			{ query, currentPage },
+			{ 
+				timeout: 0, // Không timeout cho AI requests
+				headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
+			},
 		);
 		// API trả về { success: true, data: {...} }, cần unwrap data
 		return response.data.data;
@@ -47,6 +47,7 @@ export const getAIHistory = async (): Promise<AIHistoryResponse> => {
 			AI_ENDPOINTS.history,
 			{
 				timeout: 0,
+				headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
 			},
 		);
 		// API trả về { success: true, data: {...} }, cần unwrap data
@@ -62,7 +63,10 @@ export const getAIHistory = async (): Promise<AIHistoryResponse> => {
  */
 export const clearAIHistory = async (): Promise<void> => {
 	try {
-		await apiClient.delete(AI_ENDPOINTS.history, { timeout: 0 });
+		await apiClient.delete(AI_ENDPOINTS.history, { 
+			timeout: 0,
+			headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
+		});
 	} catch (error) {
 		console.error('Error clearing AI history:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể xóa lịch sử chat'));

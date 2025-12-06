@@ -15,7 +15,7 @@ const AIFloatingButton: React.FC = () => {
 	const { isLoggedIn } = useAuth();
 
 	// Ẩn button khi chưa đăng nhập hoặc đang ở trang AI Assistant
-	if (!isLoggedIn || location.pathname === '/ai-assistant') {
+	if (location.pathname === '/ai-assistant') {
 		return null;
 	}
 

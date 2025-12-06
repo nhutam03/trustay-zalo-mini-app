@@ -404,14 +404,10 @@ const Layout = () => {
                   <Route path="/profile/edit-dateofbirth" element={<EditDateOfBirthPage />}></Route>
                   <Route path="/profile/edit-bankinfo" element={<EditBankInfoPage />}></Route>
 
-                  {/* AI Assistant - Protected route */}
+                  {/* AI Assistant - Public route */}
                   <Route
                     path="/ai-assistant"
-                    element={
-                      <ProtectedRoute>
-                        <AIAssistantPage />
-                      </ProtectedRoute>
-                    }
+                    element={<AIAssistantPage />}
                   ></Route>
                   </AnimationRoutes>
                 </div>

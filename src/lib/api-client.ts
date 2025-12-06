@@ -200,6 +200,12 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.request.use(
   async (config: any) => {
+    // Skip token injection if X-Skip-Auth header is present
+    if (config.headers?.['X-Skip-Auth'] === 'true') {
+      delete config.headers['X-Skip-Auth']; // Remove the flag before sending
+      return config;
+    }
+    
     const token = await TokenManager.getAccessToken();
     if (token) {
       config.headers = config.headers || {};
