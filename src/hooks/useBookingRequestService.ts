@@ -70,8 +70,11 @@ export const useCreateBookingRequest = () => {
 	return useMutation({
 		mutationFn: (data: CreateBookingRequestRequest) => createBookingRequest(data),
 		onSuccess: () => {
-			// Invalidate my requests list
-			queryClient.invalidateQueries({ queryKey: bookingRequestKeys.myRequests() });
+			// Invalidate all my requests queries (including those with params)
+			queryClient.invalidateQueries({ 
+				queryKey: bookingRequestKeys.all,
+				refetchType: 'active'
+			});
 		},
 	});
 };

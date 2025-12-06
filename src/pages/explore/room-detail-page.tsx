@@ -10,6 +10,8 @@ import { changeStatusBarColor } from "@/utils/basic";
 import { useRoomDetail, useTrackRoomView } from "@/hooks/useRoomQuery";
 import { getImageProps, processImageUrl } from "@/utils/image-proxy";
 import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
+import { useCurrentUser } from "@/hooks/useAuthService";
+import { useMyBookingRequests, useCreateBookingRequest } from "@/hooks/useBookingRequestService";
 
 const RoomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,10 +23,18 @@ const RoomDetailPage: React.FC = () => {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const [validImages, setValidImages] = useState<any[]>([]);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [moveInDate, setMoveInDate] = useState("");
+  const [message, setMessage] = useState("");
 
   // Use TanStack Query
   const { data: room, isLoading: loading, error } = useRoomDetail(id);
   const trackRoomView = useTrackRoomView();
+  
+  // Auth and booking request
+  const { data: currentUser } = useCurrentUser();
+  const { data: myBookingRequests, refetch: refetchBookingRequests } = useMyBookingRequests({ status: 'pending' });
+  const createBookingRequest = useCreateBookingRequest();
 
   useEffect(() => {
     setHeader({
@@ -53,7 +63,7 @@ const RoomDetailPage: React.FC = () => {
           const img = new Image();
           img.onload = () => resolve({ ...image, valid: true });
           img.onerror = () => resolve({ ...image, valid: false });
-          img.src = image.url;
+          img.src = processImageUrl(image.url);
         });
       });
 
@@ -99,6 +109,65 @@ const RoomDetailPage: React.FC = () => {
     }
   };
 
+  // Check if user is tenant
+  const isTenant = currentUser?.role === 'tenant';
+  
+  // Check if tenant has already sent booking request for this room
+  const hasExistingRequest = myBookingRequests?.data?.some(
+    (request) => request.roomId === id && request.status === 'pending'
+  );
+  
+  // Check if tenant can send booking request
+  const canSendBookingRequest = isTenant && !hasExistingRequest;
+
+  // Handle booking request submission
+  const handleSendBookingRequest = async () => {
+    if (!id || !moveInDate) {
+      return;
+    }
+
+    try {
+      await createBookingRequest.mutateAsync({
+        roomInstanceId: id,
+        moveInDate,
+        messageToOwner: message || undefined,
+      });
+      
+      // Refetch booking requests to update UI
+      await refetchBookingRequests();
+      
+      setShowBookingModal(false);
+      setMoveInDate("");
+      setMessage("");
+      
+      // Show success message
+      alert("Gửi yêu cầu thuê thành công!");
+    } catch (error) {
+      console.error('Error sending booking request:', error);
+      alert(error instanceof Error ? error.message : "Không thể gửi yêu cầu thuê");
+    }
+  };
+
+  const handleBookingButtonClick = () => {
+    if (!currentUser) {
+      alert("Vui lòng đăng nhập để gửi yêu cầu thuê");
+      navigate('/auth/login');
+      return;
+    }
+    
+    if (!isTenant) {
+      alert("Chỉ người thuê mới có thể gửi yêu cầu thuê phòng");
+      return;
+    }
+    
+    if (hasExistingRequest) {
+      alert("Bạn đã gửi yêu cầu thuê phòng này rồi");
+      return;
+    }
+    
+    setShowBookingModal(true);
+  };
+
   if (loading) {
     return (
       <Page className="bg-gray-50">
@@ -139,10 +208,10 @@ const RoomDetailPage: React.FC = () => {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <PhotoView key={validImages[currentImageIndex]?.id} src={validImages[currentImageIndex]?.url}>
+              <PhotoView key={validImages[currentImageIndex]?.id} src={processImageUrl(validImages[currentImageIndex]?.url)}>
                 <img
                   {...getImageProps(
-                    validImages[currentImageIndex]?.url,
+                    processImageUrl(validImages[currentImageIndex]?.url),
                     validImages[currentImageIndex]?.alt || room.name,
                     { width: 800, height: 400, quality: 80 }
                   )}
@@ -489,30 +558,92 @@ const RoomDetailPage: React.FC = () => {
 
       {/* Fixed Bottom Action Buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            className="flex-1"
-            onClick={() => {
-              // TODO: Implement favorite/save functionality
-              console.log("Save room");
-            }}
-          >
-            <Icon icon="zi-heart" size={18} />
-          </Button>
-          <Button
-            variant="primary"
-            className="flex-[3]"
-            onClick={() => {
-              // TODO: Implement contact/booking functionality
-              console.log("Contact owner");
-            }}
-          >
-            <Icon icon="zi-chat" size={18} className="mr-2" />
-            Liên hệ chủ trọ
-          </Button>
-        </div>
+        <Button
+          variant="primary"
+          fullWidth
+          onClick={handleBookingButtonClick}
+          disabled={!canSendBookingRequest && currentUser !== undefined}
+        >
+          <Icon icon="zi-calendar" size={18} className="mr-2" />
+          {!currentUser 
+            ? "Đăng nhập để gửi yêu cầu thuê"
+            : !isTenant
+            ? "Chỉ người thuê mới có thể gửi yêu cầu"
+            : hasExistingRequest
+            ? "Đã gửi yêu cầu thuê"
+            : "Gửi yêu cầu thuê"}
+        </Button>
       </div>
+
+      {/* Booking Request Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+          <div className="bg-white rounded-t-2xl w-full p-6 animate-slide-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Gửi yêu cầu thuê phòng</h3>
+              <button
+                onClick={() => setShowBookingModal(false)}
+                className="p-1"
+              >
+                <Icon icon="zi-close" size={24} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ngày dự định chuyển vào *
+                </label>
+                <input
+                  type="date"
+                  value={moveInDate}
+                  onChange={(e) => setMoveInDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Lời nhắn cho chủ trọ (không bắt buộc)
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  placeholder="Ví dụ: Tôi muốn thuê phòng dài hạn..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                />
+              </div>
+              
+              <div className="bg-blue-50 rounded-lg p-3">
+                <p className="text-sm text-gray-600">
+                  <Icon icon="zi-info-circle" size={16} className="inline mr-1" />
+                  Chủ trọ sẽ xem xét yêu cầu của bạn và phản hồi sớm nhất.
+                </p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={() => setShowBookingModal(false)}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={handleSendBookingRequest}
+                  disabled={!moveInDate || createBookingRequest.isPending}
+                >
+                  {createBookingRequest.isPending ? "Đang gửi..." : "Gửi yêu cầu"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Page>
   );
 };

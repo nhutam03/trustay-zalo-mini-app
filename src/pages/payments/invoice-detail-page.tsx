@@ -51,12 +51,10 @@ const InvoiceDetailPage: React.FC = () => {
 			// First create a payment record
 			const payment = await createPaymentMutation.mutateAsync({
 				billId: id,
-				amount: Number(bill.totalAmount),
-				paymentType: 'other',
-				paymentMethod: 'other',
-				payerId: user.id,
-				receiverId: bill.rental?.landlord?.id || '',
-				notes: `Thanh toán hóa đơn tháng ${bill.billingMonth}/${bill.billingYear}`,
+				rentalId: bill.rentalId,
+				amount: parseFloat(bill.totalAmount.toString()).toFixed(2),
+				paymentType: 'utility',
+				paymentMethod: 'e_wallet',
 			});
 
 			// Then create PayOS link

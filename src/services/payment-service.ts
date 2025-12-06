@@ -11,8 +11,8 @@ export interface Payment {
 	billId?: string;
 	amount: number;
 	currency: string;
-	paymentType: 'rent' | 'deposit' | 'utility' | 'service' | 'refund' | 'other';
-	paymentMethod: 'cash' | 'bank_transfer' | 'zalopay' | 'momo' | 'other';
+	paymentType: 'rent' | 'deposit' | 'utility' | 'fee' | 'refund';
+	paymentMethod: 'bank_transfer' | 'cash' | 'e_wallet' | 'card';
 	status: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 	payerId: string;
 	receiverId: string;
@@ -68,22 +68,19 @@ export interface PaymentStatistics {
 
 export interface CreatePaymentRequest {
 	contractId?: string;
-	rentalId?: string;
+	rentalId: string; // Required UUID
 	billId?: string;
-	amount: number;
+	amount: string; // Must be a valid decimal string
 	currency?: string;
-	paymentType: 'rent' | 'deposit' | 'utility' | 'service' | 'refund' | 'other';
-	paymentMethod: 'cash' | 'bank_transfer' | 'zalopay' | 'momo' | 'other';
-	payerId: string;
-	receiverId: string;
+	paymentType: 'rent' | 'deposit' | 'utility' | 'fee' | 'refund';
+	paymentMethod: 'bank_transfer' | 'cash' | 'e_wallet' | 'card';
 	dueDate?: string;
-	notes?: string;
 	metadata?: Record<string, unknown>;
 }
 
 export interface UpdatePaymentRequest {
 	amount?: number;
-	paymentMethod?: 'cash' | 'bank_transfer' | 'zalopay' | 'momo' | 'other';
+	paymentMethod?: 'bank_transfer' | 'cash' | 'e_wallet' | 'card';
 	status?: 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 	transactionId?: string;
 	transactionDate?: string;
@@ -104,7 +101,7 @@ export interface ProcessRefundRequest {
 	paymentId: string;
 	refundAmount: number;
 	refundReason: string;
-	refundMethod?: 'cash' | 'bank_transfer' | 'zalopay' | 'momo' | 'other';
+	refundMethod?: 'bank_transfer' | 'cash' | 'e_wallet' | 'card';
 }
 
 // ========================

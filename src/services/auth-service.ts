@@ -1,8 +1,8 @@
 // Auth actions wrapper for Zalo Mini App
 // Sử dụng API từ backend giống trustay-web
 
-import { apiClient, TokenManager, extractErrorMessage } from '@/lib/api-client';
-import { authorize, getUserInfo, getPhoneNumber } from 'zmp-sdk/apis';
+import { apiClient, TokenManager, extractErrorMessage } from "@/lib/api-client";
+import { authorize, getUserInfo, getPhoneNumber } from "zmp-sdk/apis";
 //import { ZaloUserInfo } from './auth';
 
 // ========================
@@ -15,8 +15,8 @@ export interface UserProfile {
   lastName: string;
   fullName?: string;
   phone: string;
-  gender: 'male' | 'female' | 'other';
-  role: 'tenant' | 'landlord';
+  gender: "male" | "female" | "other";
+  role: "tenant" | "landlord";
   bio?: string;
   dateOfBirth?: string;
   avatarUrl?: string;
@@ -44,8 +44,8 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   phone: string;
-  gender: 'male' | 'female' | 'other';
-  role: 'tenant' | 'landlord';
+  gender: "male" | "female" | "other";
+  role: "tenant" | "landlord";
 }
 
 export interface VerificationResponse {
@@ -55,7 +55,7 @@ export interface VerificationResponse {
 }
 
 // OTP mặc định cho phone verification
-const DEFAULT_OTP = '123456';
+const DEFAULT_OTP = "123456";
 
 // ========================
 // Authentication Actions
@@ -65,16 +65,21 @@ const DEFAULT_OTP = '123456';
  * Gửi OTP verification cho số điện thoại
  * Response sẽ trả về verificationToken để dùng cho bước tiếp theo
  */
-export const sendPhoneVerification = async (phone: string): Promise<VerificationResponse> => {
+export const sendPhoneVerification = async (
+  phone: string
+): Promise<VerificationResponse> => {
   try {
-    const response = await apiClient.post<VerificationResponse>('/api/verification/send', {
-      type: 'phone',
-      identifier: phone,
-    });
+    const response = await apiClient.post<VerificationResponse>(
+      "/api/verification/send",
+      {
+        type: "phone",
+        phone: phone,
+      }
+    );
     return response.data;
   } catch (error) {
-    console.error('Error sending phone verification:', error);
-    throw new Error(extractErrorMessage(error, 'Không thể gửi mã xác thực'));
+    console.error("Error sending phone verification:", error);
+    throw new Error(extractErrorMessage(error, "Không thể gửi mã xác thực"));
   }
 };
 
@@ -84,18 +89,21 @@ export const sendPhoneVerification = async (phone: string): Promise<Verification
  */
 export const verifyPhoneCode = async (
   phone: string,
-  code: string = DEFAULT_OTP,
+  code: string = DEFAULT_OTP
 ): Promise<VerificationResponse> => {
   try {
-    const response = await apiClient.post<VerificationResponse>('/api/verification/verify', {
-      type: 'phone',
-      phone,
-      code,
-    });
+    const response = await apiClient.post<VerificationResponse>(
+      "/api/verification/verify",
+      {
+        type: "phone",
+        phone,
+        code,
+      }
+    );
     return response.data;
   } catch (error) {
-    console.error('Error verifying phone code:', error);
-    throw new Error(extractErrorMessage(error, 'Mã xác thực không đúng'));
+    console.error("Error verifying phone code:", error);
+    throw new Error(extractErrorMessage(error, "Mã xác thực không đúng"));
   }
 };
 
@@ -109,15 +117,15 @@ export const verifyPhoneCode = async (
  */
 export const registerWithVerification = async (
   userData: RegisterRequest,
-  verificationToken: string,
+  verificationToken: string
 ): Promise<AuthResponse> => {
   try {
     const response = await apiClient.post<AuthResponse>(
-      '/api/auth/register',
+      "/api/auth/register",
       userData,
       {
         headers: {
-          'X-Verification-Token': verificationToken,
+          "X-Verification-Token": verificationToken,
         },
       }
     );
@@ -130,8 +138,8 @@ export const registerWithVerification = async (
 
     return response.data;
   } catch (error) {
-    console.error('Error registering with verification:', error);
-    throw new Error(extractErrorMessage(error, 'Đăng ký thất bại'));
+    console.error("Error registering with verification:", error);
+    throw new Error(extractErrorMessage(error, "Đăng ký thất bại"));
   }
 };
 
@@ -146,15 +154,18 @@ export const registerWithVerification = async (
 export const registerWithZaloToken = async (
   zaloAccessToken: string,
   additionalData?: {
-    role?: 'tenant' | 'landlord';
-    gender?: 'male' | 'female' | 'other';
+    role?: "tenant" | "landlord";
+    gender?: "male" | "female" | "other";
   }
 ): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/api/auth/zalo-register', {
-      accessToken: zaloAccessToken,
-      ...additionalData,
-    });
+    const response = await apiClient.post<AuthResponse>(
+      "/api/auth/zalo-register",
+      {
+        accessToken: zaloAccessToken,
+        ...additionalData,
+      }
+    );
 
     const { access_token, refresh_token, user } = response.data;
 
@@ -163,8 +174,8 @@ export const registerWithZaloToken = async (
 
     return response.data;
   } catch (error) {
-    console.error('Error registering with Zalo token:', error);
-    throw new Error(extractErrorMessage(error, 'Đăng ký thất bại'));
+    console.error("Error registering with Zalo token:", error);
+    throw new Error(extractErrorMessage(error, "Đăng ký thất bại"));
   }
 };
 
@@ -176,14 +187,17 @@ export const registerWithZaloToken = async (
  */
 export const convertPhoneToken = async (token: string): Promise<string> => {
   try {
-    const response = await apiClient.post<{ phone: string }>('/api/zalo/convert-phone-token', {
-      token,
-    });
+    const response = await apiClient.post<{ phone: string }>(
+      "/api/zalo/convert-phone-token",
+      {
+        token,
+      }
+    );
 
     return response.data.phone;
   } catch (error) {
-    console.error('Error converting phone token:', error);
-    throw new Error(extractErrorMessage(error, 'Không thể lấy số điện thoại'));
+    console.error("Error converting phone token:", error);
+    throw new Error(extractErrorMessage(error, "Không thể lấy số điện thoại"));
   }
 };
 
@@ -195,19 +209,21 @@ export const convertPhoneToken = async (token: string): Promise<string> => {
 export const getZaloAccessToken = async (): Promise<string> => {
   try {
     const response = await authorize({
-      scopes: ['scope.userInfo', 'scope.userPhonenumber']
+      scopes: ["scope.userInfo", "scope.userPhonenumber"],
     });
 
     const accessToken = (response as any).accessToken;
 
     if (!accessToken) {
-      throw new Error('Không nhận được access token từ Zalo');
+      throw new Error("Không nhận được access token từ Zalo");
     }
 
     return accessToken;
   } catch (error) {
-    console.error('Error getting Zalo access token:', error);
-    throw new Error(extractErrorMessage(error, 'Không thể lấy quyền truy cập từ Zalo'));
+    console.error("Error getting Zalo access token:", error);
+    throw new Error(
+      extractErrorMessage(error, "Không thể lấy quyền truy cập từ Zalo")
+    );
   }
 };
 
@@ -229,17 +245,22 @@ export const getZaloUserInfo = async (): Promise<any> => {
 
     return result;
   } catch (error) {
-    console.error('Error getting Zalo user info:', error);
-    throw new Error(extractErrorMessage(error, 'Không thể lấy thông tin người dùng'));
+    console.error("Error getting Zalo user info:", error);
+    throw new Error(
+      extractErrorMessage(error, "Không thể lấy thông tin người dùng")
+    );
   }
 };
 
 /**
  * Đăng nhập với email và password
  */
-export const login = async (identifier: string, password: string): Promise<AuthResponse> => {
+export const login = async (
+  identifier: string,
+  password: string
+): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/api/auth/login', {
+    const response = await apiClient.post<AuthResponse>("/api/auth/login", {
       identifier,
       password,
     });
@@ -252,8 +273,8 @@ export const login = async (identifier: string, password: string): Promise<AuthR
 
     return response.data;
   } catch (error) {
-    console.error('Error logging in:', error);
-    throw new Error(extractErrorMessage(error, 'Đăng nhập thất bại'));
+    console.error("Error logging in:", error);
+    throw new Error(extractErrorMessage(error, "Đăng nhập thất bại"));
   }
 };
 
@@ -264,11 +285,16 @@ export const login = async (identifier: string, password: string): Promise<AuthR
  * @param zaloAccessToken - Access token nhận được từ Zalo authorize()
  * @returns AuthResponse với access_token, refresh_token, user
  */
-export const loginWithZaloToken = async (zaloAccessToken: string): Promise<AuthResponse> => {
+export const loginWithZaloToken = async (
+  zaloAccessToken: string
+): Promise<AuthResponse> => {
   try {
-    const response = await apiClient.post<AuthResponse>('/api/auth/zalo-login', {
-      accessToken: zaloAccessToken,
-    });
+    const response = await apiClient.post<AuthResponse>(
+      "/api/auth/zalo-login",
+      {
+        accessToken: zaloAccessToken,
+      }
+    );
 
     const { access_token, refresh_token, user } = response.data;
 
@@ -277,7 +303,7 @@ export const loginWithZaloToken = async (zaloAccessToken: string): Promise<AuthR
 
     return response.data;
   } catch (error) {
-    console.error('Error logging in with Zalo token:', error);
+    console.error("Error logging in with Zalo token:", error);
     throw error;
   }
 };
@@ -295,11 +321,13 @@ export const isAuthenticated = (): boolean => {
  */
 export const getCurrentUser = async (): Promise<UserProfile> => {
   try {
-    const response = await apiClient.get<UserProfile>('/api/auth/me');
+    const response = await apiClient.get<UserProfile>("/api/auth/me");
     return response.data;
   } catch (error) {
-    console.error('Error getting current user:', error);
-    throw new Error(extractErrorMessage(error, 'Không thể lấy thông tin người dùng'));
+    console.error("Error getting current user:", error);
+    throw new Error(
+      extractErrorMessage(error, "Không thể lấy thông tin người dùng")
+    );
   }
 };
 
@@ -308,9 +336,9 @@ export const getCurrentUser = async (): Promise<UserProfile> => {
  */
 export const logout = async (): Promise<void> => {
   try {
-    await apiClient.post('/api/auth/logout');
+    await apiClient.post("/api/auth/logout");
   } catch (error) {
-    console.error('Error calling logout API:', error);
+    console.error("Error calling logout API:", error);
   } finally {
     TokenManager.clearAllTokens();
   }
@@ -323,10 +351,10 @@ export const refreshToken = async (): Promise<AuthResponse> => {
   try {
     const refreshTokenValue = TokenManager.getRefreshToken();
     if (!refreshTokenValue) {
-      throw new Error('No refresh token available');
+      throw new Error("No refresh token available");
     }
 
-    const response = await apiClient.post<AuthResponse>('/api/auth/refresh', {
+    const response = await apiClient.post<AuthResponse>("/api/auth/refresh", {
       refreshToken: refreshTokenValue,
     });
 
@@ -337,9 +365,9 @@ export const refreshToken = async (): Promise<AuthResponse> => {
 
     return response.data;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    console.error("Error refreshing token:", error);
     TokenManager.clearAllTokens();
-    throw new Error(extractErrorMessage(error, 'Không thể làm mới token'));
+    throw new Error(extractErrorMessage(error, "Không thể làm mới token"));
   }
 };
 
@@ -367,15 +395,22 @@ export const checkAuthStatus = async (): Promise<boolean> => {
  * @param zaloAccessToken - Access token nhận được từ Zalo authorize()
  * @returns UserProfile đã được cập nhật
  */
-export const linkZaloAccount = async (zaloAccessToken: string): Promise<UserProfile> => {
+export const linkZaloAccount = async (
+  zaloAccessToken: string
+): Promise<UserProfile> => {
   try {
-    const response = await apiClient.post<{ user: UserProfile }>('/api/auth/link-zalo', {
-      accessToken: zaloAccessToken,
-    });
+    const response = await apiClient.post<{ user: UserProfile }>(
+      "/api/auth/link-zalo",
+      {
+        accessToken: zaloAccessToken,
+      }
+    );
 
     return response.data.user;
   } catch (error) {
-    console.error('Error linking Zalo account:', error);
-    throw new Error(extractErrorMessage(error, 'Liên kết tài khoản Zalo thất bại'));
+    console.error("Error linking Zalo account:", error);
+    throw new Error(
+      extractErrorMessage(error, "Liên kết tài khoản Zalo thất bại")
+    );
   }
 };

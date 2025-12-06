@@ -10,6 +10,7 @@ import {
 	useProcessRefund,
 } from '@/hooks/usePaymentService';
 import { formatCurrency } from '@/utils/format';
+import { formatPaymentMethod } from '@/utils/paymentUtils';
 import { useCurrentUser } from '@/hooks/useAuthService';
 
 const PaymentDetailPage: React.FC = () => {
@@ -246,7 +247,7 @@ const PaymentDetailPage: React.FC = () => {
 						<Box className="space-y-2">
 							<Box className="flex justify-between">
 								<Text className="text-gray-600">Phương thức:</Text>
-								<Text className="font-semibold">{payment.paymentMethod}</Text>
+								<Text className="font-semibold">{formatPaymentMethod(payment.paymentMethod)}</Text>
 							</Box>
 							{payment.transactionId && (
 								<Box className="flex justify-between">

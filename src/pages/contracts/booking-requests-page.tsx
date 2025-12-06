@@ -102,7 +102,7 @@ const BookingRequestsPage: React.FC = () => {
 						{request.room?.name || 'Phòng không xác định'}
 					</h3>
 					<p className="text-sm text-gray-600">
-						{request.room?.building?.address || 'Địa chỉ không xác định'}
+						{request.room?.building?.name || 'Địa chỉ không xác định'}
 					</p>
 				</div>
 				{getStatusBadge(request.status)}
@@ -137,6 +137,17 @@ const BookingRequestsPage: React.FC = () => {
 				<div className="bg-gray-50 p-3 rounded-lg mb-3">
 					<p className="text-sm text-gray-700">{request.messageToOwner}</p>
 				</div>
+			)}
+
+			{/* View Room Detail Link */}
+			{request.room?.id && (
+				<button
+					onClick={() => navigate(`/room/${request?.room?.id}`)}
+					className="w-full mb-3 py-2 border border-primary text-primary rounded-lg text-sm font-medium active:opacity-70 flex items-center justify-center gap-1"
+				>
+					<Icon icon="zi-post" size={16} />
+					Xem chi tiết phòng
+				</button>
 			)}
 
 			{request.status === 'pending' && (
