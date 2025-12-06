@@ -150,8 +150,7 @@ const RoomDetailPage: React.FC = () => {
 
   const handleBookingButtonClick = () => {
     if (!currentUser) {
-      alert("Vui lòng đăng nhập để gửi yêu cầu thuê");
-      navigate('/auth/login');
+      navigate('/login');
       return;
     }
     
