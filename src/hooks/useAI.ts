@@ -83,7 +83,16 @@ export const useAI = (): UseAIReturn => {
 						result.contentStats = (p as ContentPayload).stats;
 					} else if (p.mode === 'LIST' || p.mode === 'TABLE' || p.mode === 'CHART') {
 						const dp = p as DataPayload;
-						if (dp.list) result.dataList = dp.list;
+						// Fix path mismatch: backend returns /rooms/:id but frontend expects /room/:id
+						if (dp.list) {
+							result.dataList = {
+								items: dp.list.items.map(item => ({
+									...item,
+									path: item.path?.replace(/^\/rooms\//, '/room/') || item.path
+								})),
+								total: dp.list.total
+							};
+						}
 						if (dp.table) result.dataTable = dp.table;
 						if (dp.chart)
 							result.chart = {
@@ -175,7 +184,16 @@ export const useAI = (): UseAIReturn => {
 						payload.mode === 'CHART'
 					) {
 						const dataPayload = payload as DataPayload;
-						enrichments.dataList = dataPayload.list;
+						// Fix path mismatch: backend returns /rooms/:id but frontend expects /room/:id
+						if (dataPayload.list) {
+							enrichments.dataList = {
+								items: dataPayload.list.items.map(item => ({
+									...item,
+									path: item.path?.replace(/^\/rooms\//, '/room/') || item.path
+								})),
+								total: dataPayload.list.total
+							};
+						}
 						enrichments.dataTable = dataPayload.table;
 						enrichments.chart = dataPayload.chart
 							? {
