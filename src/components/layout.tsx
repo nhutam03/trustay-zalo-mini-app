@@ -100,6 +100,13 @@ const queryClient = new QueryClient({
 });
 
 const Layout = () => {
+  // Disable browser's automatic scroll restoration globally
+  React.useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
   return (
     <RecoilRoot>
       <QueryClientProvider client={queryClient}>

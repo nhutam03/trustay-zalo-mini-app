@@ -13,6 +13,7 @@ import { roomSeekingPostsToCards } from "@/utils/room-seeking";
 import { roommatePostsToCards } from "@/utils/roommate-seeking";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useLayoutEffect } from "react";
 
 import Box from "zmp-ui/box";
 import Page from "zmp-ui/page";
@@ -21,21 +22,52 @@ import Tabs from "zmp-ui/tabs";
 const ExplorePage: React.FC = () => {
   const setHeader = useSetHeader();
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">(
-    (location.state as any)?.activeTab || "all-rooms"
-  );
+  
+  // Persist state using sessionStorage to survive component unmount/remount
+  const [activeTab, setActiveTab] = useState<"all-rooms" | "seeking-rooms" | "seeking-roommates">(() => {
+    const saved = sessionStorage.getItem('explore-active-tab');
+    return (location.state as any)?.activeTab || saved || "all-rooms";
+  });
 
-  // Pagination states
-  const [currentPageAllRooms, setCurrentPageAllRooms] = useState(1);
-  const [currentPageSeekingRooms, setCurrentPageSeekingRooms] = useState(1);
-  const [currentPageRoommates, setCurrentPageRoommates] = useState(1);
+  // Pagination states - persist across navigation
+  const [currentPageAllRooms, setCurrentPageAllRooms] = useState(() => {
+    const saved = sessionStorage.getItem('explore-page-all-rooms');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const [currentPageSeekingRooms, setCurrentPageSeekingRooms] = useState(() => {
+    const saved = sessionStorage.getItem('explore-page-seeking-rooms');
+    return saved ? parseInt(saved, 10) : 1;
+  });
+  const [currentPageRoommates, setCurrentPageRoommates] = useState(() => {
+    const saved = sessionStorage.getItem('explore-page-roommates');
+    return saved ? parseInt(saved, 10) : 1;
+  });
 
   const ITEMS_PER_PAGE = 20;
+
+  // Save state to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('explore-active-tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    sessionStorage.setItem('explore-page-all-rooms', currentPageAllRooms.toString());
+  }, [currentPageAllRooms]);
+
+  useEffect(() => {
+    sessionStorage.setItem('explore-page-seeking-rooms', currentPageSeekingRooms.toString());
+  }, [currentPageSeekingRooms]);
+
+  useEffect(() => {
+    sessionStorage.setItem('explore-page-roommates', currentPageRoommates.toString());
+  }, [currentPageRoommates]);
 
   // Use TanStack Query hooks for all tabs
   const {
     data: roomsData,
     isLoading: loadingAllRooms,
+    isFetching: fetchingAllRooms,
+    isSuccess: successAllRooms,
   } = useRoomsList({
     search: '.',
     page: currentPageAllRooms,
@@ -47,6 +79,7 @@ const ExplorePage: React.FC = () => {
   const {
     data: roomSeekingData,
     isLoading: loadingSeekingRooms,
+    isFetching: fetchingSeekingRooms,
   } = useRoomSeekingPostsList({
     page: currentPageSeekingRooms,
     limit: ITEMS_PER_PAGE,
@@ -55,7 +88,18 @@ const ExplorePage: React.FC = () => {
   const {
     data: roommateData,
     isLoading: loadingRoommates,
+    isFetching: fetchingRoommates,
   } = useRoommatePostsList(currentPageRoommates, ITEMS_PER_PAGE);
+
+  // Debug: Log to verify TanStack Query is using cache
+  useEffect(() => {
+    if (activeTab === 'all-rooms') {
+      console.log('🔍 All Rooms - Loading:', loadingAllRooms, 'Fetching:', fetchingAllRooms, 'Success:', successAllRooms, 'Has Data:', !!roomsData);
+      if (roomsData && !fetchingAllRooms) {
+        console.log('✅ Using cached data for page', currentPageAllRooms);
+      }
+    }
+  }, [activeTab, loadingAllRooms, fetchingAllRooms, roomsData, currentPageAllRooms, successAllRooms]);
 
   // Derived data
   const allRooms = roomsData ? roomsToRoomCards(roomsData) : [];
@@ -76,25 +120,66 @@ const ExplorePage: React.FC = () => {
     });
     changeStatusBarColor("primary");
 
-    // Restore scroll position when coming back to this page
-    const savedScrollPosition = sessionStorage.getItem(`explore-scroll-${activeTab}`);
-    if (savedScrollPosition) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedScrollPosition, 10));
-        sessionStorage.removeItem(`explore-scroll-${activeTab}`);
-      }, 100);
+    // Disable browser's automatic scroll restoration
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
     }
-  }, [activeTab]);
 
-  // Save scroll position before navigating away
-  useEffect(() => {
-    const handleScroll = () => {
-      sessionStorage.setItem(`explore-scroll-${activeTab}`, window.scrollY.toString());
+    return () => {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'auto';
+      }
     };
+  }, []);
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [activeTab]);
+  // Restore scroll position when returning from room detail
+  // Use useLayoutEffect to restore BEFORE browser paints
+  useLayoutEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem('explore-return-scroll');
+    
+    if (savedScrollPosition) {
+      const scrollPosition = parseInt(savedScrollPosition, 10);
+      console.log('🔄 [LayoutEffect] Attempting to restore scroll to:', scrollPosition);
+      
+      // Prevent any automatic scroll to top
+      const preventScroll = (e: Event) => {
+        if (window.scrollY === 0 && scrollPosition > 0) {
+          e.preventDefault();
+          window.scrollTo(0, scrollPosition);
+        }
+      };
+      
+      window.addEventListener('scroll', preventScroll, { passive: false });
+      
+      // Restore immediately in layoutEffect (before paint)
+      window.scrollTo(0, scrollPosition);
+      
+      // Try multiple times to ensure it sticks
+      const timeouts: NodeJS.Timeout[] = [];
+      [0, 10, 50, 100, 200].forEach(delay => {
+        const timeoutId = setTimeout(() => {
+          if (window.scrollY !== scrollPosition) {
+            window.scrollTo(0, scrollPosition);
+            console.log(`🔄 Retry scroll restore at ${delay}ms:`, scrollPosition);
+          }
+        }, delay);
+        timeouts.push(timeoutId);
+      });
+      
+      // Clean up after final attempt
+      const finalTimeout = setTimeout(() => {
+        window.removeEventListener('scroll', preventScroll);
+        console.log('✅ [LayoutEffect] Final scroll position:', window.scrollY);
+        sessionStorage.removeItem('explore-return-scroll');
+      }, 300);
+      timeouts.push(finalTimeout);
+      
+      return () => {
+        window.removeEventListener('scroll', preventScroll);
+        timeouts.forEach(t => clearTimeout(t));
+      };
+    }
+  }, []);
 
   // Handle tab change
   const handleTabChange = (tabId: string) => {

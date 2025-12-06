@@ -18,7 +18,9 @@ const RoomSeekingCard: React.FC<RoomSeekingCardProps> = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/room-seeking/${id}`);
+    // Save current scroll position before navigating
+    sessionStorage.setItem('explore-return-scroll', window.scrollY.toString());
+    navigate(`/room-seeking/${id}`, { state: { from: '/explore' } });
   };
 
   const formatPrice = (price: number) => {

@@ -50,7 +50,11 @@ const Header = () => {
   ];
 
   const handleBack = () => {
-    if (route === "/explore" && location.pathname.startsWith("/roommate/")) {
+    // Use browser back navigation to preserve scroll position
+    // when returning from detail pages
+    if (location.pathname.match(/^\/(room|room-seeking|roommate)\/\d+$/)) {
+      navigate(-1);
+    } else if (route === "/explore" && location.pathname.startsWith("/roommate/")) {
       // Quay về tab "Tìm bạn" khi từ roommate detail page
       navigate(route, { state: { activeTab: "seeking-roommates" } });
     } else if (route) {

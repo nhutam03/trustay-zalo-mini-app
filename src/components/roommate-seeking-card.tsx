@@ -22,7 +22,9 @@ const RoommateCard: React.FC<RoommateCardProps> = ({
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/roommate/${id}`, { state: { fromTab: "seeking-roommates" } });
+    // Save current scroll position before navigating
+    sessionStorage.setItem('explore-return-scroll', window.scrollY.toString());
+    navigate(`/roommate/${id}`, { state: { from: '/explore', fromTab: "seeking-roommates" } });
   };
 
   const formatPrice = (price: number) => {
