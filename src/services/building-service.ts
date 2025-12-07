@@ -50,7 +50,7 @@ export interface BuildingsListResponse {
 
 export interface CreateBuildingRequest {
 	name: string;
-	address: string;
+	addressLine1: string;
 	provinceId: number;
 	districtId: number;
 	wardId?: number;

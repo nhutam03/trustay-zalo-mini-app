@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Page, Box, Icon, Input, Button } from "zmp-ui";
+import { Page, Box, Icon, Input, Button, Select } from "zmp-ui";
 import useSetHeader from "@/hooks/useSetHeader";
 import { changeStatusBarColor } from "@/utils/basic";
 import {
@@ -8,7 +8,13 @@ import {
   useCreateBuilding,
   useUpdateBuilding,
 } from "@/hooks/useBuildingService";
+import {
+  useProvinces,
+  useDistricts,
+  useWards,
+} from "@/hooks/useLocationService";
 import type { CreateBuildingRequest } from "@/services/building-service";
+const { Option } = Select;
 
 const BuildingFormPage: React.FC = () => {
   const setHeader = useSetHeader();
@@ -18,7 +24,7 @@ const BuildingFormPage: React.FC = () => {
 
   const [formData, setFormData] = useState<CreateBuildingRequest>({
     name: "",
-    address: "",
+    addressLine1: "",
     provinceId: 0,
     districtId: 0,
     wardId: undefined,
@@ -31,6 +37,17 @@ const BuildingFormPage: React.FC = () => {
   const { data: building } = useBuilding(id || "", isEditMode);
   const createBuilding = useCreateBuilding();
   const updateBuilding = useUpdateBuilding();
+
+  // Load location data
+  const { data: provinces, isLoading: loadingProvinces } = useProvinces();
+  const { data: districts, isLoading: loadingDistricts } = useDistricts(
+    formData.provinceId,
+    formData.provinceId > 0
+  );
+  const { data: wards, isLoading: loadingWards } = useWards(
+    formData.districtId,
+    formData.districtId > 0
+  );
 
   useEffect(() => {
     setHeader({
@@ -45,7 +62,7 @@ const BuildingFormPage: React.FC = () => {
     if (building && isEditMode) {
       setFormData({
         name: building.name,
-        address: building.address,
+        addressLine1: building.addressLine1,
         provinceId: building.provinceId,
         districtId: building.districtId,
         wardId: building.wardId,
@@ -60,8 +77,8 @@ const BuildingFormPage: React.FC = () => {
     if (!formData.name.trim()) {
       newErrors.name = "Vui lòng nhập tên tòa nhà";
     }
-    if (!formData.address.trim()) {
-      newErrors.address = "Vui lòng nhập địa chỉ";
+    if (!formData.addressLine1.trim()) {
+      newErrors.addressLine1 = "Vui lòng nhập địa chỉ";
     }
     if (!formData.provinceId || formData.provinceId === 0) {
       newErrors.provinceId = "Vui lòng chọn tỉnh/thành phố";
@@ -94,7 +111,20 @@ const BuildingFormPage: React.FC = () => {
   };
 
   const handleChange = (field: keyof CreateBuildingRequest, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      
+      // Reset dependent fields when parent location changes
+      if (field === "provinceId") {
+        newData.districtId = 0;
+        newData.wardId = undefined;
+      } else if (field === "districtId") {
+        newData.wardId = undefined;
+      }
+      
+      return newData;
+    });
+    
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -134,12 +164,12 @@ const BuildingFormPage: React.FC = () => {
           <Input
             type="text"
             placeholder="VD: 123 Đường ABC"
-            value={formData.address}
-            onChange={(e) => handleChange("address", e.target.value)}
-            className={errors.address ? "border-red-500" : ""}
+            value={formData.addressLine1}
+            onChange={(e) => handleChange("addressLine1", e.target.value)}
+            className={errors.addressLine1 ? "border-red-500" : ""}
           />
-          {errors.address && (
-            <p className="text-xs text-red-500 mt-1">{errors.address}</p>
+          {errors.addressLine1 && (
+            <p className="text-xs text-red-500 mt-1">{errors.addressLine1}</p>
           )}
         </div>
 
@@ -148,19 +178,22 @@ const BuildingFormPage: React.FC = () => {
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Tỉnh/Thành phố <span className="text-red-500">*</span>
           </label>
-          <Input
-            type="number"
-            placeholder="Nhập mã tỉnh/thành phố"
-            value={formData.provinceId || ""}
-            onChange={(e) => handleChange("provinceId", parseInt(e.target.value) || 0)}
+          <Select
+            placeholder="Chọn tỉnh/thành phố"
+            value={formData.provinceId || undefined}
+            onChange={(value) => handleChange("provinceId", Number(value))}
             className={errors.provinceId ? "border-red-500" : ""}
-          />
+            disabled={loadingProvinces}
+          >
+            {provinces?.map((province) => (
+              <Option key={province.id} value={province.id} title={province.name}>
+                {province.name}
+              </Option>
+            ))}
+          </Select>
           {errors.provinceId && (
             <p className="text-xs text-red-500 mt-1">{errors.provinceId}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            Nhập mã ID của tỉnh/thành phố (ví dụ: 1 cho Hà Nội, 79 cho TP.HCM)
-          </p>
         </div>
 
         {/* District ID */}
@@ -168,19 +201,22 @@ const BuildingFormPage: React.FC = () => {
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Quận/Huyện <span className="text-red-500">*</span>
           </label>
-          <Input
-            type="number"
-            placeholder="Nhập mã quận/huyện"
-            value={formData.districtId || ""}
-            onChange={(e) => handleChange("districtId", parseInt(e.target.value) || 0)}
+          <Select
+            placeholder="Chọn quận/huyện"
+            value={formData.districtId || undefined}
+            onChange={(value) => handleChange("districtId", Number(value))}
             className={errors.districtId ? "border-red-500" : ""}
-          />
+            disabled={!formData.provinceId || loadingDistricts}
+          >
+            {districts?.map((district) => (
+              <Option key={district.id} value={district.id} title={district.name}>
+                {district.name}
+              </Option>
+            ))}
+          </Select>
           {errors.districtId && (
             <p className="text-xs text-red-500 mt-1">{errors.districtId}</p>
           )}
-          <p className="text-xs text-gray-500 mt-1">
-            Nhập mã ID của quận/huyện
-          </p>
         </div>
 
         {/* Ward ID (Optional) */}
@@ -188,15 +224,18 @@ const BuildingFormPage: React.FC = () => {
           <label className="block text-sm font-semibold text-gray-900 mb-2">
             Phường/Xã (Tùy chọn)
           </label>
-          <Input
-            type="number"
-            placeholder="Nhập mã phường/xã"
-            value={formData.wardId || ""}
-            onChange={(e) => handleChange("wardId", parseInt(e.target.value) || undefined)}
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Nhập mã ID của phường/xã (không bắt buộc)
-          </p>
+          <Select
+            placeholder="Chọn phường/xã"
+            value={formData.wardId || undefined}
+            onChange={(value) => handleChange("wardId", value ? Number(value) : undefined)}
+            disabled={!formData.districtId || loadingWards}
+          >
+            {wards?.map((ward) => (
+              <Option key={ward.id} value={ward.id} title={ward.name}>
+                {ward.name}
+              </Option>
+            ))}
+          </Select>
         </div>
 
         {/* Description */}
