@@ -1,11 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Page, Box, Input, Button, Text } from 'zmp-ui';
+import { Page, Box, Input, Button, Text, Select } from 'zmp-ui';
 import { useNavigate } from 'react-router-dom';
 import { postAIRoomPublish } from '@/services/ai-service';
 import { RoomPublishingStatus, type RoomPublishResponse } from '@/interfaces/ai';
 import { useUploadBulkImages } from '@/hooks/useUploadService';
 import { processImageUrl } from '@/utils/image-proxy';
 import useSetHeader from '@/hooks/useSetHeader';
+import { useMyBuildings } from '@/hooks/useBuildingService';
+
+const { Option } = Select;
 
 interface ImagePreview {
 	id: string;
@@ -62,11 +65,19 @@ const AIQuickRoomPostPage: React.FC = () => {
 	const [creationError, setCreationError] = useState<string | null>(null);
 	const [conversationMessages, setConversationMessages] = useState<ConversationMessage[]>([]);
 	const [isThinking, setIsThinking] = useState(false);
+	const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const uploadBulkImagesMutation = useUploadBulkImages();
+	const { data: buildingsData, isLoading: buildingsLoading } = useMyBuildings();
 	const MAX_IMAGES = 5;
+
+	// Debug: Log buildings data
+	useEffect(() => {
+		console.log('Buildings data:', buildingsData);
+		console.log('Buildings loading:', buildingsLoading);
+	}, [buildingsData, buildingsLoading]);
 
 	// Auto scroll to bottom
 	useEffect(() => {
@@ -115,7 +126,7 @@ const AIQuickRoomPostPage: React.FC = () => {
 				setDialogState('created');
 				if (data.payload?.roomId) {
 					setTimeout(() => {
-						navigate(`/landlord/rooms/${data.payload!.roomId}`);
+						navigate(`/room/${data.payload!.roomId}`);
 					}, 2000);
 				}
 				break;
@@ -211,26 +222,25 @@ const AIQuickRoomPostPage: React.FC = () => {
 			.filter((img) => img.uploadPath && !img.isUploading && !img.uploadError)
 			.map((img) => img.uploadPath!);
 
-		try {
-			setIsSubmitting(true);
-			const messageContent = content || 'Đăng tải phòng trọ';
+			try {
+				setIsSubmitting(true);
+				const messageContent = content || 'Đăng tải phòng trọ';
 
-			const userMessage: ConversationMessage = {
-				id: `user_${Date.now()}`,
-				role: 'user',
-				content: messageContent,
-				timestamp: new Date().toISOString(),
-			};
-			setConversationMessages([userMessage]);
+				const userMessage: ConversationMessage = {
+					id: `user_${Date.now()}`,
+					role: 'user',
+					content: messageContent,
+					timestamp: new Date().toISOString(),
+				};
+				setConversationMessages([userMessage]);
 
-			setDialogState('loading');
+				setDialogState('loading');
 
-			const response = await sendRoomPublishMessage(
-				messageContent,
-				imagePaths.length > 0 ? imagePaths : undefined,
-			);
-
-			handleResponse(response);
+				const response = await sendRoomPublishMessage(
+					messageContent,
+					imagePaths.length > 0 ? imagePaths : undefined,
+					selectedBuildingId || undefined,
+				);			handleResponse(response);
 			setDescription('');
 		} catch (error) {
 			console.error('Failed to send:', error);
@@ -268,6 +278,7 @@ const AIQuickRoomPostPage: React.FC = () => {
 			const response = await sendRoomPublishMessage(
 				content,
 				imagePaths.length > 0 ? imagePaths : undefined,
+				selectedBuildingId || undefined,
 			);
 
 			handleResponse(response);
@@ -292,6 +303,7 @@ const AIQuickRoomPostPage: React.FC = () => {
 			const response = await sendRoomPublishMessage(
 				'',
 				imagePaths.length > 0 ? imagePaths : undefined,
+				selectedBuildingId || undefined,
 			);
 
 			handleResponse(response);
@@ -308,6 +320,41 @@ const AIQuickRoomPostPage: React.FC = () => {
 			<Box className="p-4 space-y-4">
 				{dialogState === 'form' && (
 					<Box className="bg-white rounded-lg shadow p-4 space-y-4">
+						{/* Building Selector */}
+						<div className="space-y-2 pb-4 border-b border-gray-100">
+							<Text bold size="small" className="text-gray-800">
+								Chọn tòa nhà
+							</Text>
+						<Select
+							placeholder="Chọn tòa nhà để tạo phòng..."
+							closeOnSelect={true}
+							value={selectedBuildingId}
+							onChange={(value) => setSelectedBuildingId(value as string)}
+							disabled={buildingsLoading}
+							className="w-full"
+						>
+							{(buildingsData?.data || []).map((building) => (
+								<Option 
+									key={building.id} 
+									value={building.id}
+									title={building.name}
+								>
+									{building.name} - {building.location?.districtName}, {building.location?.provinceName}
+								</Option>
+							))}
+						</Select>
+							{!selectedBuildingId && (
+								<Text size="xSmall" className="text-amber-600">
+									⚠️ Nếu không chọn tòa nhà, AI sẽ tự động tạo tòa nhà mới (nếu cần)
+								</Text>
+							)}
+							{selectedBuildingId && (
+								<Text size="xSmall" className="text-green-600">
+									✓ Phòng sẽ được tạo trong tòa nhà này
+								</Text>
+							)}
+						</div>
+
 						<Text size="small" className="text-gray-600">
 							Mô tả phòng trọ của bạn và thêm hình ảnh. AI sẽ giúp bạn tạo bài đăng hoàn chỉnh.
 						</Text>

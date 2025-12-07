@@ -59,10 +59,11 @@ export const uploadBulkImages = async (
 			formData.append('files', file);
 		});
 
-		// Append alt texts if provided
+		// Append each alt text as a separate array entry
 		if (altTexts && altTexts.length > 0) {
-			// The API expects altTexts as comma-separated string
-			formData.append('altTexts', altTexts.join(','));
+			altTexts.forEach((altText) => {
+				formData.append('altTexts[]', altText);
+			});
 		}
 
 		const response = await apiClient.post<BulkUploadResponse>('/api/upload/bulk', formData, {

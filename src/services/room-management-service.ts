@@ -88,7 +88,9 @@ export interface CreateRoomRequest {
 	amenities?: string[];
 	costs?: Array<{
 		costTypeId: string;
+		costType: 'fixed' | 'per_person' | 'metered';
 		value: number;
+		unit?: string;
 		notes?: string;
 	}>;
 	rules?: string[];
@@ -113,7 +115,9 @@ export interface UpdateRoomRequest {
 	amenities?: string[];
 	costs?: Array<{
 		costTypeId: string;
+		costType: 'fixed' | 'per_person' | 'metered';
 		value: number;
+		unit?: string;
 		notes?: string;
 	}>;
 	rules?: string[];

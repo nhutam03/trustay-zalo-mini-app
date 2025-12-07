@@ -129,10 +129,25 @@ export const getMyBuildings = async (params?: {
 		const response = await apiClient.get<{
 			success: boolean;
 			message: string;
-			data: BuildingsListResponse;
+			data: {
+				buildings: Building[];
+				total: number;
+				page: number;
+				limit: number;
+				totalPages: number;
+			};
 		}>(endpoint);
 
-		return response.data.data;
+		// Map response to expected format
+		return {
+			data: response.data.data.buildings || [],
+			meta: {
+				page: response.data.data.page || 1,
+				limit: response.data.data.limit || 10,
+				total: response.data.data.total || 0,
+				totalPages: response.data.data.totalPages || 1,
+			},
+		};
 	} catch (error) {
 		console.error('Error getting my buildings:', error);
 		throw new Error(extractErrorMessage(error, 'Không thể tải danh sách dãy trọ của tôi'));

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Page, Box, Header, Button, Modal, Text } from 'zmp-ui';
+import { Page, Box, Header, Button, Modal, Text, Select } from 'zmp-ui';
 import { useNavigate } from 'react-router-dom';
 import { useAI, type EnrichedMessage } from '@/hooks/useAI';
 import { AIInput } from '@/components/ai/AIInput';
@@ -10,6 +10,8 @@ import { AITablePreview } from '@/components/ai/AITablePreview';
 import { AIControlBlock } from '@/components/ai/AIControlBlock';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
+import { useMyBuildings } from '@/hooks/useBuildingService';
+const { Option } = Select;
 
 const AIAssistantPage: React.FC = () => {
 	const setHeader = useSetHeader();
@@ -27,6 +29,10 @@ const AIAssistantPage: React.FC = () => {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [dialogContent, setDialogContent] = useState<React.ReactNode>(null);
+	const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
+	
+	// Fetch buildings
+	const { data: buildingsData, isLoading: buildingsLoading } = useMyBuildings();
 
 	// Quick suggestions
 	const quickSuggestions: ReadonlyArray<string> = [
@@ -132,6 +138,41 @@ const AIAssistantPage: React.FC = () => {
 
 	return (
 		<Page className="flex flex-col h-screen">
+			{/* Building Selector */}
+			<Box className="bg-white border-b shadow-sm p-4">
+				<div className="flex flex-col gap-2">
+					<label className="text-sm font-medium text-gray-700">
+						Chọn tòa nhà để tạo phòng:
+					</label>
+					<Select
+						placeholder="Chọn tòa nhà..."
+						value={selectedBuildingId}
+						onChange={(value) => setSelectedBuildingId(value as string)}
+						disabled={buildingsLoading}
+						className="w-full"
+					>
+						{buildingsData?.data?.map((building) => (
+							<Option 
+								key={building.id} 
+								value={building.id}
+								title={building.name}
+							>
+								{building.name} - {building.location?.districtName}, {building.location?.provinceName}
+							</Option>
+						))}
+					</Select>
+					{!selectedBuildingId && (
+						<p className="text-xs text-gray-500">
+							Vui lòng chọn tòa nhà trước khi tạo phòng với AI
+						</p>
+					)}
+					{selectedBuildingId && (
+						<p className="text-xs text-green-600">
+							✓ Đã chọn tòa nhà
+						</p>
+					)}
+				</div>
+			</Box>
 
 			<Box className="flex-1 overflow-y-auto p-4 pb-24 space-y-3 bg-gray-50">
 				{isLoading && messages.length === 0 && (

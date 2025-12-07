@@ -179,6 +179,7 @@ const BuildingFormPage: React.FC = () => {
             Tỉnh/Thành phố <span className="text-red-500">*</span>
           </label>
           <Select
+            closeOnSelect={true}
             placeholder="Chọn tỉnh/thành phố"
             value={formData.provinceId || undefined}
             onChange={(value) => handleChange("provinceId", Number(value))}
@@ -202,6 +203,7 @@ const BuildingFormPage: React.FC = () => {
             Quận/Huyện <span className="text-red-500">*</span>
           </label>
           <Select
+            closeOnSelect={true}
             placeholder="Chọn quận/huyện"
             value={formData.districtId || undefined}
             onChange={(value) => handleChange("districtId", Number(value))}
@@ -225,6 +227,7 @@ const BuildingFormPage: React.FC = () => {
             Phường/Xã (Tùy chọn)
           </label>
           <Select
+            closeOnSelect={true}
             placeholder="Chọn phường/xã"
             value={formData.wardId || undefined}
             onChange={(value) => handleChange("wardId", value ? Number(value) : undefined)}

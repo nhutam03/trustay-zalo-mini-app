@@ -401,7 +401,7 @@ const Layout = () => {
                     }
                   ></Route>
                   <Route
-                    path="/buildings/:id/rooms/create"
+                    path="/buildings/:buildingId/rooms/create"
                     element={
                       <ProtectedRoute>
                         <RoomFormPage />
