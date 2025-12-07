@@ -15,7 +15,7 @@ const DashboardPage: React.FC = () => {
 
 	useEffect(() => {
         setHeader({
-          title: "Cá nhân",
+          title: "Trustay Dashboard",
           hasLeftIcon: false,
           type: "primary",
         });
@@ -112,7 +112,7 @@ const DashboardPage: React.FC = () => {
 							icon="zi-inbox"
 							label="Yêu cầu đặt phòng"
 							value={operations.pendingBookings ?? 0}
-							onClick={() => navigate('/landlord/bookings')}
+							onClick={() => navigate('/booking-requests')}
 							iconColor="text-yellow-600"
 						/>
 						<OperationCard

@@ -217,7 +217,7 @@ export interface RoomSeekingFormData {
 	minBudget: number;
 	maxBudget: number;
 	currency: 'VND' | 'USD';
-	preferredRoomType: 'boarding_house' | 'apartment' | 'house' | 'studio';
+	preferredRoomType: 'boarding_house' | 'apartment' | 'whole_house' | 'dormitory' | 'sleepbox';
 	occupancy: number;
 	moveInDate: string;
 	isPublic: boolean;
@@ -229,10 +229,9 @@ export interface RoomSeekingFormData {
 export const ROOM_TYPES = {
 	BOARDING_HOUSE: 'boarding_house',
 	APARTMENT: 'apartment',
-	HOUSE: 'house',
-	STUDIO: 'studio',
-	MONITORY: 'monitory',
-	SLEEP_BOX: 'sleep_box',
+	WHOLE_HOUSE: 'whole_house',
+	DORMITORY: 'dormitory',
+	SLEEPBOX: 'sleepbox',
 } as const;
 
 export const CURRENCIES = {
@@ -251,10 +250,9 @@ export const POST_STATUSES = {
 export const ROOM_TYPE_LABELS = {
 	[ROOM_TYPES.BOARDING_HOUSE]: 'Nhà trọ',
 	[ROOM_TYPES.APARTMENT]: 'Căn hộ',
-	[ROOM_TYPES.HOUSE]: 'Nhà nguyên căn',
-	[ROOM_TYPES.STUDIO]: 'Studio',
-	[ROOM_TYPES.MONITORY]: 'Ký túc xá',
-	[ROOM_TYPES.SLEEP_BOX]: 'Sleep box',
+	[ROOM_TYPES.WHOLE_HOUSE]: 'Nhà nguyên căn',
+	[ROOM_TYPES.DORMITORY]: 'Ký túc xá',
+	[ROOM_TYPES.SLEEPBOX]: 'Sleep box',
 } as const;
 
 // Currency labels for display

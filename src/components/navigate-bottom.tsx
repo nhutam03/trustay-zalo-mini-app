@@ -75,7 +75,7 @@ const BottomNav: React.FC = () => {
       label: "Đăng tin",
       icon: "zi-plus-circle",
       iconActive: "zi-plus-circle-solid",
-      route: "/post-room",
+      route: "/post",
     },
     {
       id: "messages",

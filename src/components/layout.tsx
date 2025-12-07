@@ -25,7 +25,7 @@ import RoomSeekingDetailPage from "@/pages/explore/room-seeking-detail-page";
 import RoommateDetailPage from "@/pages/explore/roommate-detail-page";
 import SavedRoomsPage from "@/pages/explore/saved-rooms-page";
 import TenantPreferencesPage from "@/pages/explore/tenant-preferences-page";
-import PostRoomPage from "@/pages/explore/post-page";
+import TenantPostPage from "@/pages/explore/tenant-post-page";
 
 // Messaging pages
 import MessagesPage from "@/pages/messaging/message-page";
@@ -109,6 +109,7 @@ const ROUTES_WITH_BOTTOM_NAV = [
   '/explore',
   '/messages',
   '/profile',
+  '/post',
   '/post-room',
 ];
 
@@ -189,10 +190,10 @@ const Layout = () => {
                     }
                   ></Route>
                   <Route
-                    path="/post-room"
+                    path="/post"
                     element={
                       <ProtectedRoute>
-                        <PostRoomPage />
+                        <TenantPostPage />
                       </ProtectedRoute>
                     }
                   ></Route>
