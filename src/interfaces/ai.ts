@@ -132,3 +132,103 @@ export interface AIStateSnapshot {
 		  })
 	>;
 }
+
+// Room Publishing with AI - Dedicated types for room publishing flow
+export interface RoomPublishRequest {
+	message?: string; // Optional - can be empty to trigger creation
+	buildingId?: string;
+	images?: string[];
+}
+
+export enum RoomPublishingStatus {
+	NEED_MORE_INFO = 'NEED_MORE_INFO',
+	READY_TO_CREATE = 'READY_TO_CREATE',
+	CREATED = 'CREATED',
+	CREATION_FAILED = 'CREATION_FAILED',
+}
+
+// Building payload structure
+export interface BuildingPayload {
+	name: string;
+	addressLine1: string;
+	districtId: number;
+	provinceId: number;
+	wardId: number;
+	country: string;
+	addressLine2?: string;
+}
+
+// Room payload structure
+export interface RoomPayload {
+	name: string;
+	description?: string;
+	roomType?: string;
+	totalRooms?: number;
+	maxOccupancy?: number;
+	areaSqm?: number;
+	floorNumber?: number;
+	roomNumberPrefix?: string;
+	roomNumberStart?: number;
+	pricing?: {
+		basePriceMonthly?: number;
+		depositAmount?: number;
+		depositMonths?: number;
+		utilityIncluded?: boolean;
+		minimumStayMonths?: number;
+		priceNegotiable?: boolean;
+	};
+	amenities?: Array<{ systemAmenityId: string }>;
+	costs?: unknown[];
+	rules?: unknown[];
+	images?: {
+		images: Array<{
+			path: string;
+			alt?: string;
+			isPrimary?: boolean;
+			sortOrder?: number;
+		}>;
+	};
+}
+
+// Room publishing plan structure
+export interface RoomPublishPlan {
+	shouldCreateBuilding: boolean;
+	buildingId?: string;
+	buildingPayload?: BuildingPayload;
+	roomPayload: RoomPayload;
+	description?: string;
+}
+
+export interface RoomPublishResponse {
+	success: boolean;
+	data?: {
+		kind: 'CONTENT' | 'CONTROL';
+		sessionId: string;
+		timestamp?: string;
+		message: string;
+		payload?: {
+			mode: 'ROOM_PUBLISH';
+			status: RoomPublishingStatus;
+			// For NEED_MORE_INFO
+			missingField?: string;
+			hasPendingActions?: boolean;
+			// For READY_TO_CREATE
+			plan?: RoomPublishPlan;
+			// For CREATED
+			roomId?: string;
+			roomSlug?: string;
+			roomPath?: string; // "/rooms/{slug}" - dùng để redirect
+			// For CREATION_FAILED
+			error?: string;
+		};
+		meta?: {
+			stage: string;
+			planReady?: boolean;
+			shouldCreateBuilding?: boolean;
+			pendingActions?: number;
+			actionTypes?: string;
+		};
+	};
+	error?: string;
+	message?: string;
+}

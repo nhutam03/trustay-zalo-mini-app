@@ -36,10 +36,12 @@ export interface UseAIReturn {
 	isThinking: boolean;
 	error: string | null;
 	sessionId?: string;
+	contextImages: string[] | null;
 	loadHistory: () => Promise<void>;
-	sendPrompt: (content: string) => Promise<void>;
+	sendPrompt: (content: string, images?: string[]) => Promise<void>;
 	clearHistory: () => Promise<void>;
 	setError: (message: string | null) => void;
+	setContextImages: (images: string[] | null) => void;
 }
 
 /**
@@ -47,10 +49,13 @@ export interface UseAIReturn {
  *
  * @example
  * ```tsx
- * const { messages, isLoading, sendPrompt, clearHistory } = useAI();
+ * const { messages, isLoading, sendPrompt, clearHistory, setContextImages } = useAI();
  *
  * // Gửi câu hỏi
  * await sendPrompt('Tìm phòng trọ ở Gò Vấp');
+ *
+ * // Gửi câu hỏi kèm ảnh
+ * await sendPrompt('Phòng này giá bao nhiêu?', ['/uploads/room1.jpg']);
  *
  * // Xóa lịch sử
  * await clearHistory();
@@ -62,6 +67,7 @@ export const useAI = (): UseAIReturn => {
 	const [isThinking, setIsThinking] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+	const [contextImages, setContextImages] = useState<string[] | null>(null);
 
 	// Load lịch sử chat khi component mount
 	const loadHistory = useCallback(async () => {
@@ -125,7 +131,7 @@ export const useAI = (): UseAIReturn => {
 	}, []);
 
 	// Gửi câu hỏi tới AI
-	const sendPrompt = useCallback(async (content: string) => {
+	const sendPrompt = useCallback(async (content: string, images?: string[]) => {
 		// Thêm user message tạm thời
 		const userMsg: EnrichedMessage = {
 			id: `local_${Date.now()}`,
@@ -149,7 +155,14 @@ export const useAI = (): UseAIReturn => {
 			]);
 
 			const currentPage = typeof window !== 'undefined' ? window.location.pathname : undefined;
-			const res = await postAIChat(content, currentPage);
+			// Use provided images or fall back to context images
+			const imagesToSend = images ?? contextImages ?? undefined;
+			const res = await postAIChat(content, currentPage, imagesToSend);
+			
+			// Clear context images after use if they were used from context
+			if (imagesToSend && !images) {
+				setContextImages(null);
+			}
 
 			// Support both old AIChatResponse and new ChatEnvelope
 			const maybeEnvelope = res as unknown as Partial<ChatEnvelope>;
@@ -238,7 +251,7 @@ export const useAI = (): UseAIReturn => {
 		} finally {
 			setIsThinking(false);
 		}
-	}, []);
+	}, [contextImages]);
 
 	// Xóa lịch sử chat
 	const clearHistoryCallback = useCallback(async () => {
@@ -261,9 +274,11 @@ export const useAI = (): UseAIReturn => {
 		isThinking,
 		error,
 		sessionId,
+		contextImages,
 		loadHistory,
 		sendPrompt,
 		clearHistory: clearHistoryCallback,
 		setError,
+		setContextImages,
 	};
 };

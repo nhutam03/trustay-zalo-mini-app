@@ -8,6 +8,7 @@ import { AIMessageMarkdown } from '@/components/ai/AIMessageMarkdown';
 import { AIListPreview } from '@/components/ai/AIListPreview';
 import { AITablePreview } from '@/components/ai/AITablePreview';
 import { AIControlBlock } from '@/components/ai/AIControlBlock';
+import { AIPostRoomModal } from '@/components/ai/AIPostRoomModal';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 
@@ -27,6 +28,7 @@ const AIAssistantPage: React.FC = () => {
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [dialogContent, setDialogContent] = useState<React.ReactNode>(null);
+	const [postRoomModalVisible, setPostRoomModalVisible] = useState(false);
 
 	// Quick suggestions
 	const quickSuggestions: ReadonlyArray<string> = [
@@ -132,21 +134,14 @@ const AIAssistantPage: React.FC = () => {
 
 	return (
 		<Page className="flex flex-col h-screen">
-			{/* <Header
-				title="AI Assistant"
-				showBackIcon
-				onBackClick={() => navigate(-1)}
-				rightIcon={
-					<Button
-						size="small"
-						variant="secondary"
-						onClick={() => clearHistory()}
-						disabled={isLoading}
-					>
-						Xóa
-					</Button>
-				}
-			/> */}
+			{/* Floating Action Button for Quick Room Post */}
+			<button
+				onClick={() => setPostRoomModalVisible(true)}
+				className="fixed bottom-24 right-4 w-14 h-14 bg-gradient-to-br from-purple-500 to-blue-500 text-white rounded-full shadow-lg flex items-center justify-center text-2xl hover:scale-110 active:scale-95 transition-transform z-30"
+				aria-label="Đăng phòng nhanh với AI"
+			>
+				✨
+			</button>
 
 			<Box className="flex-1 overflow-y-auto p-4 pb-24 space-y-3 bg-gray-50">
 				{isLoading && messages.length === 0 && (
@@ -162,9 +157,18 @@ const AIAssistantPage: React.FC = () => {
 						<h2 className="text-2xl font-bold text-gray-900 mb-2">
 							AI Assistant
 						</h2>
-						<p className="text-gray-600 text-center mb-8">
+						<p className="text-gray-600 text-center mb-4">
 							Tôi có thể giúp bạn tìm phòng trọ, kiểm tra hóa đơn và nhiều thứ khác
 						</p>
+						
+						{/* Quick Action Button */}
+						<button
+							onClick={() => setPostRoomModalVisible(true)}
+							className="mb-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full font-medium shadow-lg hover:shadow-xl active:scale-95 transition-all"
+						>
+							✨ Đăng phòng nhanh với AI
+						</button>
+
 						<div className="w-full max-w-md space-y-2">
 							<p className="text-sm font-medium text-gray-700 mb-3">Gợi ý câu hỏi:</p>
 							{quickSuggestions.slice(0, 5).map((q, idx) => (
@@ -303,6 +307,17 @@ const AIAssistantPage: React.FC = () => {
 			>
 				{dialogContent}
 			</Modal>
+
+			{/* AI Post Room Modal */}
+			<AIPostRoomModal
+				visible={postRoomModalVisible}
+				onClose={() => setPostRoomModalVisible(false)}
+				onRoomCreated={(roomId) => {
+					console.log('Room created:', roomId);
+					// Navigate to room detail or show success message
+					navigate(`/room/${roomId}`);
+				}}
+			/>
 		</Page>
 	);
 };
