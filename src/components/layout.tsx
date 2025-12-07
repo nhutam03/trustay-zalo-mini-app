@@ -60,6 +60,8 @@ import RoomsPage from "@/pages/landlord/rooms-page";
 import RoomDetailManagementPage from "@/pages/landlord/room-detail-management-page";
 import RoomFormPage from "@/pages/landlord/room-form-page";
 import RoomInstanceDetailPage from "@/pages/landlord/room-instance-detail-page";
+import DashboardPage from "@/pages/landlord/dashboard-page";
+import AIQuickRoomPostPage from "@/pages/landlord/ai-quick-room-post-page";
 
 // Profile pages
 import ProfilePage from "@/pages/profile/profile-page";
@@ -80,12 +82,14 @@ import HelpCenterPage from "@/pages/others/help-center-page";
 import ProtectedRoute from "./ProtectedRoute";
 import Header from "./header";
 import AIFloatingButton from "./ai-floating-button";
+import BottomNav from "./navigate-bottom";
 import { RecoilRoot } from "recoil";
 import React, { Suspense } from "react";
 import { ConfigProvider, getConfig } from "./providers/config-provider";
 import { AuthProvider } from "./providers/auth-provider";
 import { hexToRgb } from "@/utils/basic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -98,6 +102,30 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Routes that should show BottomNav
+const ROUTES_WITH_BOTTOM_NAV = [
+  '/',
+  '/explore',
+  '/messages',
+  '/profile',
+  '/post-room',
+];
+
+// Component to conditionally render BottomNav
+const ConditionalBottomNav: React.FC = () => {
+  const location = useLocation();
+  
+  // Check if current route should show BottomNav
+  const shouldShowBottomNav = ROUTES_WITH_BOTTOM_NAV.some(route => {
+    if (route === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(route);
+  });
+
+  return shouldShowBottomNav ? <BottomNav /> : null;
+};
 
 const Layout = () => {
   // Disable browser's automatic scroll restoration globally
@@ -324,6 +352,22 @@ const Layout = () => {
 
                   {/* Landlord Management Routes - Protected */}
                   <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <DashboardPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/post-room"
+                    element={
+                      <ProtectedRoute>
+                        <AIQuickRoomPostPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
                     path="/buildings"
                     element={
                       <ProtectedRoute>
@@ -418,6 +462,7 @@ const Layout = () => {
                   ></Route>
                   </AnimationRoutes>
                 </div>
+                <ConditionalBottomNav />
               </ZMPRouter>
             {/* </SnackbarProvider> */}
           </Suspense>

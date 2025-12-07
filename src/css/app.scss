@@ -40,3 +40,39 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Smooth page transitions */
+.zaui-page {
+  transition: opacity 0.2s ease-in-out;
+  will-change: opacity;
+  background-color: #f4f5f6;
+}
+
+/* Prevent flash of unstyled content */
+.zaui-page.zaui-animation-enter {
+  opacity: 0;
+}
+
+.zaui-page.zaui-animation-enter-active {
+  opacity: 1;
+  transition: opacity 0.2s ease-out;
+}
+
+.zaui-page.zaui-animation-exit {
+  opacity: 1;
+}
+
+.zaui-page.zaui-animation-exit-active {
+  opacity: 0;
+  transition: opacity 0.15s ease-in;
+}
+
+/* Smooth transition for bottom nav */
+.fixed.bottom-0 button {
+  transition: all 0.15s ease-in-out;
+}
+
+.fixed.bottom-0 button:active {
+  transform: scale(0.96);
+  opacity: 0.8;
+}
