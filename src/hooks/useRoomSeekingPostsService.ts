@@ -6,6 +6,7 @@ import {
 	updateRoomSeekingPost,
 	updateRoomSeekingPostStatus,
 	deleteRoomSeekingPost,
+	getMyRoomSeekingPosts,
 } from '@/services/room-seeking-service';
 import type {
 	CreateRoomSeekingPostRequest,
@@ -17,6 +18,8 @@ import type {
 export const roomSeekingPostKeys = {
 	all: ['room-seeking-posts'] as const,
 	lists: () => [...roomSeekingPostKeys.all, 'list'] as const,
+	myPosts: (filters: Record<string, unknown>) => 
+		[...roomSeekingPostKeys.all, 'my-posts', filters] as const,
 	search: (params: RoomSeekingSearchParams) => 
 		[...roomSeekingPostKeys.all, 'search', params] as const,
 	details: () => [...roomSeekingPostKeys.all, 'detail'] as const,
@@ -29,6 +32,21 @@ export const useRoomSeekingPost = (id: string, enabled = true) => {
 		queryKey: roomSeekingPostKeys.detail(id),
 		queryFn: () => getRoomSeekingPostById(id),
 		enabled: enabled && !!id,
+		staleTime: 2 * 60 * 1000,
+	});
+};
+
+// Get my room seeking posts
+export const useMyRoomSeekingPosts = (params?: {
+	page?: number;
+	limit?: number;
+	status?: string;
+	sortBy?: string;
+	sortOrder?: 'asc' | 'desc';
+}) => {
+	return useQuery({
+		queryKey: roomSeekingPostKeys.myPosts(params || {}),
+		queryFn: () => getMyRoomSeekingPosts(params),
 		staleTime: 2 * 60 * 1000,
 	});
 };
@@ -54,6 +72,7 @@ export const useCreateRoomSeekingPost = () => {
 		mutationFn: (data: CreateRoomSeekingPostRequest) => createRoomSeekingPost(data),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.myPosts({}) });
 		},
 	});
 };
@@ -68,6 +87,7 @@ export const useUpdateRoomSeekingPost = () => {
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.detail(variables.id) });
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.myPosts({}) });
 		},
 	});
 };
@@ -82,6 +102,7 @@ export const useUpdateRoomSeekingPostStatus = () => {
 		onSuccess: (_, variables) => {
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.detail(variables.id) });
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.myPosts({}) });
 		},
 	});
 };
@@ -94,6 +115,7 @@ export const useDeleteRoomSeekingPost = () => {
 		mutationFn: (id: string) => deleteRoomSeekingPost(id),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.lists() });
+			queryClient.invalidateQueries({ queryKey: roomSeekingPostKeys.myPosts({}) });
 		},
 	});
 };

@@ -66,6 +66,17 @@ const ProfilePage: React.FC = () => {
       description: "Quản lý yêu cầu đặt phòng",
     });
 
+    // Manage posts for tenants
+    if (user?.role === "tenant") {
+      items.push({
+        id: "tenant-posts",
+        label: "Quản lý bài đăng",
+        icon: "zi-edit",
+        route: "/tenant-posts",
+        description: "Quản lý bài đăng tìm trọ",
+      });
+    }
+
     // Menu đặc biệt cho landlord
     if (user?.role === "landlord") {
       items.push(

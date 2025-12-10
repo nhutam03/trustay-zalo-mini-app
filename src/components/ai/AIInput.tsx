@@ -27,79 +27,10 @@ export const AIInput: React.FC<AIInputProps> = ({ onSend, disabled = false, onIm
 		}
 	};
 
-	const handleImageClick = () => {
-		fileInputRef.current?.click();
-	};
-
-	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (!files) return;
-
-		const imagePaths: string[] = [];
-		for (let i = 0; i < files.length; i++) {
-			const file = files[i];
-			if (file.type.startsWith('image/')) {
-				// In real app, you would upload these files and get paths
-				// For now, we'll create object URLs as placeholders
-				imagePaths.push(URL.createObjectURL(file));
-			}
-		}
-
-		if (imagePaths.length > 0) {
-			setSelectedImages((prev) => [...prev, ...imagePaths]);
-			if (onImagesSelect) {
-				onImagesSelect([...selectedImages, ...imagePaths]);
-			}
-		}
-	};
-
-	const removeImage = (index: number) => {
-		setSelectedImages((prev) => {
-			const updated = prev.filter((_, i) => i !== index);
-			if (onImagesSelect) {
-				onImagesSelect(updated);
-			}
-			return updated;
-		});
-	};
-
 	return (
 		<div className="fixed bottom-0 left-0 right-0 p-4 border-t bg-white shadow-lg" style={{ zIndex: 40 }}>
 			<div className="max-w-4xl mx-auto">
-				{/* Image previews */}
-				{selectedImages.length > 0 && (
-					<div className="flex gap-2 mb-2 overflow-x-auto pb-2">
-						{selectedImages.map((img, index) => (
-							<div key={index} className="relative flex-shrink-0">
-								<img src={img} alt="" className="w-16 h-16 object-cover rounded border" />
-								<button
-									onClick={() => removeImage(index)}
-									className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-								>
-									×
-								</button>
-							</div>
-						))}
-					</div>
-				)}
-				
 				<div className="flex items-center gap-2">
-					<button
-						onClick={handleImageClick}
-						disabled={disabled}
-						className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 disabled:opacity-30"
-						aria-label="Chọn ảnh"
-					>
-						📷
-					</button>
-					<input
-						ref={fileInputRef}
-						type="file"
-						accept="image/*"
-						multiple
-						onChange={handleFileChange}
-						className="hidden"
-					/>
 					<Input
 						type="text"
 						placeholder="Hỏi gì cũng được..."

@@ -93,7 +93,7 @@ export interface RoomSeekingPost {
 	minBudget?: number;
 	maxBudget: number;
 	currency: string;
-	preferredRoomType?: 'boarding_house' | 'apartment' | 'house' | 'studio';
+	preferredRoomType?: 'boarding_house' | 'apartment' | 'whole_house' | 'dormitory' | 'sleepbox';
 	occupancy?: number;
 	moveInDate?: string;
 	isPublic: boolean;
@@ -140,7 +140,7 @@ export interface CreateRoomSeekingPostRequest {
 	minBudget: number;
 	maxBudget: number;
 	currency: 'VND' | 'USD';
-	preferredRoomType: 'boarding_house' | 'apartment' | 'house' | 'studio';
+	preferredRoomType: 'boarding_house' | 'apartment' | 'whole_house' | 'dormitory' | 'sleepbox';
 	occupancy: number;
 	moveInDate: string;
 	isPublic: boolean;
@@ -157,7 +157,7 @@ export interface UpdateRoomSeekingPostRequest {
 	minBudget?: number;
 	maxBudget?: number;
 	currency?: 'VND' | 'USD';
-	preferredRoomType?: 'boarding_house' | 'apartment' | 'house' | 'studio';
+	preferredRoomType?: 'boarding_house' | 'apartment' | 'whole_house' | 'dormitory' | 'sleepbox';
 	occupancy?: number;
 	moveInDate?: string;
 	isPublic?: boolean;

@@ -73,6 +73,9 @@ import EditBioPage from "@/pages/profile/EditBioPage";
 import EditGenderPage from "@/pages/profile/EditGenderPage";
 import EditDateOfBirthPage from "@/pages/profile/EditDateOfBirthPage";
 import EditBankInfoPage from "@/pages/profile/EditBankInfoPage";
+import TenantPostsManagementPage from "@/pages/profile/tenant-posts-management-page";
+import EditRoomSeekingPage from "@/pages/profile/edit-room-seeking-page";
+import EditRoommateSeekingPage from "@/pages/profile/edit-roommate-seeking-page";
 
 // AI pages
 import AIAssistantPage from "@/pages/ai/ai-assistant-page";
@@ -342,6 +345,30 @@ const Layout = () => {
                   <Route path="/settings" element={<SettingsPage />}></Route>
                   <Route path="/saved-rooms" element={<SavedRoomsPage />}></Route>
                   <Route path="/help" element={<HelpCenterPage />}></Route>
+                  <Route
+                    path="/tenant-posts"
+                    element={
+                      <ProtectedRoute>
+                        <TenantPostsManagementPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/edit-room-seeking/:id"
+                    element={
+                      <ProtectedRoute>
+                        <EditRoomSeekingPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
+                  <Route
+                    path="/edit-roommate-seeking/:id"
+                    element={
+                      <ProtectedRoute>
+                        <EditRoommateSeekingPage />
+                      </ProtectedRoute>
+                    }
+                  ></Route>
                   <Route
                     path="/link-account"
                     element={
