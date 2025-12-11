@@ -20,6 +20,8 @@ const AIFloatingButton: React.FC = () => {
 	}
 
 	const handleClick = () => {
+		// Lưu lại trang hiện tại để AI biết context
+		sessionStorage.setItem('ai_previous_page', location.pathname);
 		navigate('/ai-assistant');
 	};
 

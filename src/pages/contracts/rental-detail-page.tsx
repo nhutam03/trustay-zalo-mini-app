@@ -131,7 +131,7 @@ const RentalDetailPage: React.FC = () => {
 						<div className="flex-1">
 							<div
 								className="cursor-pointer"
-								onClick={() => rental.roomInstance?.room?.slug && navigate(`/room/${rental.roomInstance.room.slug}`)}
+								onClick={() => rental.roomInstance?.room?.slug && navigate(`/rooms/${rental.roomInstance.room.slug}`)}
 							>
 								<h2 className="text-lg font-bold text-gray-900 mb-1 hover:text-primary transition-colors">
 									{rental.roomInstance?.room?.name || 'Phòng không xác định'}
@@ -220,7 +220,7 @@ const RentalDetailPage: React.FC = () => {
 								<Button
 									size="small"
 									variant="tertiary"
-									onClick={() => navigate(`/room/${rental.roomInstance?.room?.id}`)}
+									onClick={() => navigate(`/rooms/${rental.roomInstance?.room?.id}`)}
 								>
 									<Icon icon="zi-search" size={16} className="mr-1" />
 									Xem phòng

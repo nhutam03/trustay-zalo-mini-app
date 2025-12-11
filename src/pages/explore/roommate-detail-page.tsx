@@ -175,7 +175,7 @@ const RoommateDetailPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Phòng</span>
                 <button
-                  onClick={() => navigate(`/room/${post.roomInstance?.room?.id}`)}
+                  onClick={() => navigate(`/rooms/${post.roomInstance?.room?.id}`)}
                   className="text-sm font-medium text-primary hover:underline"
                 >
                   {post.roomInstance.room.name} - {post.roomInstance.roomNumber}

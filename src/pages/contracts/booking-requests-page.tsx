@@ -142,7 +142,7 @@ const BookingRequestsPage: React.FC = () => {
 			{/* View Room Detail Link */}
 			{request.room?.id && (
 				<button
-					onClick={() => navigate(`/room/${request?.room?.id}`)}
+					onClick={() => navigate(`/rooms/${request?.room?.id}`)}
 					className="w-full mb-3 py-2 border border-primary text-primary rounded-lg text-sm font-medium active:opacity-70 flex items-center justify-center gap-1"
 				>
 					<Icon icon="zi-post" size={16} />

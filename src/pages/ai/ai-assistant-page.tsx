@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Page, Box, Header, Button, Modal, Text, Select } from 'zmp-ui';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAI, type EnrichedMessage } from '@/hooks/useAI';
 import { AIInput } from '@/components/ai/AIInput';
 import { AITypingIndicator } from '@/components/ai/AITypingIndicator';
@@ -11,6 +11,7 @@ import { AIControlBlock } from '@/components/ai/AIControlBlock';
 import useSetHeader from '@/hooks/useSetHeader';
 import { changeStatusBarColor } from '@/utils/basic';
 import { useMyBuildings } from '@/hooks/useBuildingService';
+import { postAIChat } from '@/services/ai-service';
 const { Option } = Select;
 
 const AIAssistantPage: React.FC = () => {
@@ -24,9 +25,15 @@ const AIAssistantPage: React.FC = () => {
 		changeStatusBarColor('primary');
 	}, []);
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { messages, isLoading, isThinking, error, loadHistory, sendPrompt, clearHistory } =
 		useAI();
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	
+	// Lấy previousPage từ sessionStorage
+	const previousPage = sessionStorage.getItem('ai_previous_page') || undefined;
+	console.log('[AI Assistant] previousPage from sessionStorage:', previousPage);
+	
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [dialogContent, setDialogContent] = useState<React.ReactNode>(null);
 	const [selectedBuildingId, setSelectedBuildingId] = useState<string>('');
@@ -128,7 +135,9 @@ const AIAssistantPage: React.FC = () => {
 	};
 
 	const onSend = async (content: string) => {
-		await sendPrompt(content);
+		// Gửi với previousPage nếu có, để giữ context trang trước đó
+		console.log('[AI] Sending with previousPage:', previousPage);
+		await sendPrompt(content, undefined, previousPage);
 	};
 
 	const onOpenDialog = (content: React.ReactNode) => {
@@ -138,41 +147,24 @@ const AIAssistantPage: React.FC = () => {
 
 	return (
 		<Page className="flex flex-col h-screen">
-			{/* Building Selector */}
-			<Box className="bg-white border-b shadow-sm p-4">
-				<div className="flex flex-col gap-2">
-					<label className="text-sm font-medium text-gray-700">
-						Chọn tòa nhà để tạo phòng:
-					</label>
-					<Select
-						placeholder="Chọn tòa nhà..."
-						value={selectedBuildingId}
-						onChange={(value) => setSelectedBuildingId(value as string)}
-						disabled={buildingsLoading}
-						className="w-full"
-					>
-						{buildingsData?.data?.map((building) => (
-							<Option 
-								key={building.id} 
-								value={building.id}
-								title={building.name}
-							>
-								{building.name} - {building.location?.districtName}, {building.location?.provinceName}
-							</Option>
-						))}
-					</Select>
-					{!selectedBuildingId && (
-						<p className="text-xs text-gray-500">
-							Vui lòng chọn tòa nhà trước khi tạo phòng với AI
-						</p>
-					)}
-					{selectedBuildingId && (
-						<p className="text-xs text-green-600">
-							✓ Đã chọn tòa nhà
-						</p>
-					)}
+			{/* Fixed Header with Clear Button */}
+			<div className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+				<div className="text-sm text-gray-600">
+					{messages.length > 0 ? `${messages.length} tin nhắn` : 'Chưa có tin nhắn'}
 				</div>
-			</Box>
+				<Button
+					size="small"
+					variant="tertiary"
+					onClick={async () => {
+						if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử chat?')) {
+							await clearHistory();
+							//sessionStorage.removeItem('ai_previous_page');
+						}
+					}}
+				>
+					🗑️ Xóa lịch sử
+				</Button>
+			</div>
 
 			<Box className="flex-1 overflow-y-auto p-4 pb-24 space-y-3 bg-gray-50">
 				{isLoading && messages.length === 0 && (
@@ -285,7 +277,7 @@ const AIAssistantPage: React.FC = () => {
 									questions={hasControlQuestions(m) ? m.controlQuestions : undefined}
 									errorCode={hasErrorInfo(m) ? m.errorCode : undefined}
 									errorDetails={hasErrorInfo(m) ? m.errorDetails : undefined}
-									onAsk={(q) => sendPrompt(q)}
+									onAsk={(q) => sendPrompt(q, undefined, previousPage)}
 								/>
 							)}
 

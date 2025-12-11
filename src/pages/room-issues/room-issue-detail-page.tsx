@@ -143,7 +143,7 @@ const RoomIssueDetailPage: React.FC = () => {
 							<Button
 								size="small"
 								variant="tertiary"
-								onClick={() => navigate(`/room/${issue.roomInstance.room.slug}`)}
+								onClick={() => navigate(`/rooms/${issue.roomInstance.room.slug}`)}
 								className="mt-2"
 							>
 								<Icon icon="zi-star" size={14} className="mr-1" />

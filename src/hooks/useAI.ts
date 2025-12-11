@@ -38,7 +38,7 @@ export interface UseAIReturn {
 	sessionId?: string;
 	contextImages: string[] | null;
 	loadHistory: () => Promise<void>;
-	sendPrompt: (content: string, images?: string[]) => Promise<void>;
+	sendPrompt: (content: string, images?: string[], customPage?: string) => Promise<void>;
 	clearHistory: () => Promise<void>;
 	setError: (message: string | null) => void;
 	setContextImages: (images: string[] | null) => void;
@@ -89,12 +89,12 @@ export const useAI = (): UseAIReturn => {
 						result.contentStats = (p as ContentPayload).stats;
 					} else if (p.mode === 'LIST' || p.mode === 'TABLE' || p.mode === 'CHART') {
 						const dp = p as DataPayload;
-						// Fix path mismatch: backend returns /rooms/:id but frontend expects /room/:id
+						// Fix path mismatch: backend returns /rooms/:id but frontend expects /rooms/:id
 						if (dp.list) {
 							result.dataList = {
 								items: dp.list.items.map(item => ({
 									...item,
-									path: item.path?.replace(/^\/rooms\//, '/room/') || item.path
+									path: item.path?.replace(/^\/rooms\//, '/rooms/') || item.path
 								})),
 								total: dp.list.total
 							};
@@ -131,7 +131,7 @@ export const useAI = (): UseAIReturn => {
 	}, []);
 
 	// Gửi câu hỏi tới AI
-	const sendPrompt = useCallback(async (content: string, images?: string[]) => {
+	const sendPrompt = useCallback(async (content: string, images?: string[], customPage?: string) => {
 		// Thêm user message tạm thời
 		const userMsg: EnrichedMessage = {
 			id: `local_${Date.now()}`,
@@ -154,7 +154,9 @@ export const useAI = (): UseAIReturn => {
 				},
 			]);
 
-			const currentPage = typeof window !== 'undefined' ? window.location.pathname : undefined;
+			// Use customPage if provided, otherwise use current page
+			const currentPage = customPage || (typeof window !== 'undefined' ? window.location.pathname : undefined);
+			console.log('[useAI] sendPrompt - customPage:', customPage, 'currentPage:', currentPage);
 			// Use provided images or fall back to context images
 			const imagesToSend = images ?? contextImages ?? undefined;
 			const res = await postAIChat(content, currentPage, imagesToSend);
@@ -197,12 +199,12 @@ export const useAI = (): UseAIReturn => {
 						payload.mode === 'CHART'
 					) {
 						const dataPayload = payload as DataPayload;
-						// Fix path mismatch: backend returns /rooms/:id but frontend expects /room/:id
+						// Fix path mismatch: backend returns /rooms/:id but frontend expects /rooms/:id
 						if (dataPayload.list) {
 							enrichments.dataList = {
 								items: dataPayload.list.items.map(item => ({
 									...item,
-									path: item.path?.replace(/^\/rooms\//, '/room/') || item.path
+									path: item.path?.replace(/^\/rooms\//, '/rooms/') || item.path
 								})),
 								total: dataPayload.list.total
 							};

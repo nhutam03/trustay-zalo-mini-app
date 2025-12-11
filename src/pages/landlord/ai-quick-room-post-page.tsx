@@ -126,7 +126,7 @@ const AIQuickRoomPostPage: React.FC = () => {
 				setDialogState('created');
 				if (data.payload?.roomId) {
 					setTimeout(() => {
-						navigate(`/room/${data.payload!.roomId}`);
+						navigate(`/rooms/${data.payload!.roomId}`);
 					}, 2000);
 				}
 				break;

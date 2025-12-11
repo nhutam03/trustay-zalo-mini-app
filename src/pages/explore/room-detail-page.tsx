@@ -12,6 +12,7 @@ import { getImageProps, processImageUrl } from "@/utils/image-proxy";
 import { ROOM_TYPE_LABELS } from "@/interfaces/basic";
 import { useCurrentUser } from "@/hooks/useAuthService";
 import { useMyBookingRequests, useCreateBookingRequest } from "@/hooks/useBookingRequestService";
+import { postAIChat } from "@/services/ai-service";
 
 const RoomDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,9 @@ const RoomDetailPage: React.FC = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [moveInDate, setMoveInDate] = useState("");
   const [message, setMessage] = useState("");
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Use TanStack Query
   const { data: room, isLoading: loading, error } = useRoomDetail(id);
@@ -52,6 +56,7 @@ const RoomDetailPage: React.FC = () => {
       trackRoomView.mutate(room);
     }
   }, [room]);
+
 
   // Pre-validate images before rendering
   useEffect(() => {
@@ -165,6 +170,31 @@ const RoomDetailPage: React.FC = () => {
     }
     
     setShowBookingModal(true);
+  };
+
+  // Handle AI room analysis
+  const handleAIAnalysis = async () => {
+    if (isAnalyzing) return;
+    
+    // Open modal immediately
+    setShowAIModal(true);
+    setIsAnalyzing(true);
+    setAiAnalysisResult("");
+    
+    try {
+      // Gọi API trực tiếp và lấy response
+      const currentPage = `/rooms/${id}`;
+      const response = await postAIChat("phân tích phòng trọ hiện tại", currentPage);
+      
+      // Hiển thị kết quả ngay
+      console.log('[Room Detail] AI Response:', response);
+      setAiAnalysisResult(response.message);
+      setIsAnalyzing(false);
+    } catch (error) {
+      console.error('Error sending AI analysis:', error);
+      setIsAnalyzing(false);
+      setAiAnalysisResult("Không thể phân tích phòng. Vui lòng thử lại!");
+    }
   };
 
   if (loading) {
@@ -514,7 +544,7 @@ const RoomDetailPage: React.FC = () => {
               {room.similarRooms.map((similarRoom) => (
                 <div
                   key={similarRoom.id}
-                  onClick={() => navigate(`/room/${similarRoom.id}`)}
+                  onClick={() => navigate(`/rooms/${similarRoom.id}`)}
                   className="flex-shrink-0 w-64 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md cursor-pointer transition-all"
                 >
                   <div className="w-full h-40 overflow-hidden">
@@ -557,22 +587,132 @@ const RoomDetailPage: React.FC = () => {
 
       {/* Fixed Bottom Action Buttons */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
-        <Button
-          variant="primary"
-          fullWidth
-          onClick={handleBookingButtonClick}
-          disabled={!canSendBookingRequest && currentUser !== undefined}
-        >
-          <Icon icon="zi-calendar" size={18} className="mr-2" />
-          {!currentUser 
-            ? "Đăng nhập để gửi yêu cầu thuê"
-            : !isTenant
-            ? "Chỉ người thuê mới có thể gửi yêu cầu"
-            : hasExistingRequest
-            ? "Đã gửi yêu cầu thuê"
-            : "Gửi yêu cầu thuê"}
-        </Button>
+        <div className="flex gap-2">
+          {/* AI Analysis Button */}
+          <Button
+            variant="secondary"
+            className="flex-shrink-0"
+            onClick={handleAIAnalysis}
+            disabled={isAnalyzing}
+          >
+            <Icon icon="zi-star" size={18} className="mr-1" />
+            Phân tích
+          </Button>
+          
+          {/* Booking Request Button */}
+          <Button
+            variant="primary"
+            className="flex-1"
+            onClick={handleBookingButtonClick}
+            disabled={!canSendBookingRequest && currentUser !== undefined}
+          >
+            <Icon icon="zi-calendar" size={18} className="mr-2" />
+            {!currentUser 
+              ? "Đăng nhập để gửi yêu cầu thuê"
+              : !isTenant
+              ? "Chỉ người thuê mới có thể gửi yêu cầu"
+              : hasExistingRequest
+              ? "Đã gửi yêu cầu thuê"
+              : "Gửi yêu cầu thuê"}
+          </Button>
+        </div>
       </div>
+
+      {/* AI Analysis Modal */}
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Icon icon="zi-star" size={20} className="text-blue-600" />
+                <h3 className="text-lg font-bold">Phân tích phòng bằng AI</h3>
+              </div>
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <Icon icon="zi-close" size={24} />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4">
+              {isAnalyzing ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                  <p className="text-gray-600">AI đang phân tích phòng trọ...</p>
+                  <p className="text-sm text-gray-500 mt-2">Vui lòng đợi trong giây lát</p>
+                </div>
+              ) : aiAnalysisResult ? (
+                <div className="text-sm text-gray-800 leading-relaxed space-y-3">
+                  {aiAnalysisResult.split('\n').map((line, index) => {
+                    // Handle bold text **text**
+                    const boldRegex = /\*\*(.+?)\*\*/g;
+                    const processedLine = line.replace(boldRegex, '<strong>$1</strong>');
+                    
+                    if (line.trim() === '') {
+                      return <div key={index} className="h-2"></div>;
+                    } else if (line.startsWith('**') && line.endsWith('**')) {
+                      return (
+                        <h4 key={index} className="font-bold text-base mt-4 mb-2 text-gray-900">
+                          {line.replace(/\*\*/g, '')}
+                        </h4>
+                      );
+                    } else if (line.startsWith('## ')) {
+                      return (
+                        <h3 key={index} className="font-bold text-lg mt-4 mb-2 text-gray-900">
+                          {line.replace('## ', '')}
+                        </h3>
+                      );
+                    } else if (line.startsWith('### ')) {
+                      return (
+                        <h4 key={index} className="font-semibold text-base mt-3 mb-1 text-gray-900">
+                          {line.replace('### ', '')}
+                        </h4>
+                      );
+                    } else if (line.startsWith('- ')) {
+                      return (
+                        <div key={index} className="flex gap-2 ml-2">
+                          <span className="text-gray-500">•</span>
+                          <span dangerouslySetInnerHTML={{ __html: processedLine.replace('- ', '') }} />
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <p key={index} dangerouslySetInnerHTML={{ __html: processedLine }} />
+                      );
+                    }
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Đang tải kết quả phân tích...
+                </div>
+              )}
+            </div>
+            
+            <div className="p-4 border-t border-gray-200 flex gap-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowAIModal(false)}
+              >
+                Đóng
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={() => {
+                  setShowAIModal(false);
+                  navigate('/ai-assistant');
+                }}
+              >
+                <Icon icon="zi-chat" size={18} className="mr-2" />
+                Xem chi tiết
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Booking Request Modal */}
       {showBookingModal && (

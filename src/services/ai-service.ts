@@ -39,8 +39,7 @@ export const postAIChat = async (
 			AI_ENDPOINTS.chat,
 			requestBody,
 			{ 
-				timeout: 0, // Không timeout cho AI requests
-				headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
+				timeout: 0 // Không timeout cho AI requests
 			},
 		);
 		// API trả về { success: true, data: {...} }, cần unwrap data
@@ -60,8 +59,7 @@ export const getAIHistory = async (): Promise<AIHistoryResponse> => {
 		const response = await apiClient.get<{ success: boolean; data: AIHistoryResponse }>(
 			AI_ENDPOINTS.history,
 			{
-				timeout: 0,
-				headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
+				timeout: 0
 			},
 		);
 		// API trả về { success: true, data: {...} }, cần unwrap data
@@ -78,8 +76,7 @@ export const getAIHistory = async (): Promise<AIHistoryResponse> => {
 export const clearAIHistory = async (): Promise<void> => {
 	try {
 		await apiClient.delete(AI_ENDPOINTS.history, { 
-			timeout: 0,
-			headers: { 'X-Skip-Auth': 'true' } // Flag để bỏ qua yêu cầu token
+			timeout: 0
 		});
 	} catch (error) {
 		console.error('Error clearing AI history:', error);

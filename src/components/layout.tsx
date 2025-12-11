@@ -171,7 +171,7 @@ const Layout = () => {
                   <Route path="/" element={<HomePage />}></Route>
                   <Route path="/explore" element={<ExplorePage />}></Route>
                   <Route path="/search" element={<SearchPage />}></Route>
-                  <Route path="/room/:id" element={<RoomDetailPage />}></Route>
+                  <Route path="/rooms/:id" element={<RoomDetailPage />}></Route>
                   <Route path="/room-seeking/:id" element={<RoomSeekingDetailPage />}></Route>
                   <Route path="/roommate/:id" element={<RoommateDetailPage />}></Route>
 
